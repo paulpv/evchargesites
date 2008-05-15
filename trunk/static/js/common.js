@@ -61,18 +61,6 @@ function includeJavaScript(jsfile){
 }
 
 
-function includeGoogleAnalytics(){
-  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-  var url = gaJsHost + 'google-analytics.com/ga.js';
-  includeJavaScript(url);
-}
-
-function addPageTracker(id){
-  var pageTracker = _gat._getTracker(id);
-  pageTracker._initData();
-  pageTracker._trackPageview();
-}
-
 function getCookie( name ) {
   var start = document.cookie.indexOf( name + "=" );
   var len = start + name.length + 1;

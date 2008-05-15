@@ -373,7 +373,7 @@ ChargeSite.prototype.makeStreetViewTab = function(details){
 }
 
 ChargeSite.prototype.openInfoWindow = function(details){
-	
+
   var tabDetails = this.makeDetailsTab(details);
   var tabStreetView = this.makeStreetViewTab(details);
   
@@ -385,12 +385,12 @@ ChargeSite.prototype.openInfoWindow = function(details){
   };
   this.marker.openInfoWindowTabs([
       new GInfoWindowTab('Details', tabDetails),
-      new GInfoWindowTab('Street View', tabStreetView),
+      new GInfoWindowTab('Street View', tabStreetView)
       ],
       opts);
   
   // Always do this (even if not edit mode)
-  this.calcDetailsOverflowHeight(); 
+  this.calcDetailsOverflowHeight();
 }
 
 ChargeSite.prototype.calcDetailsOverflowHeight = function(){
@@ -401,6 +401,7 @@ ChargeSite.prototype.calcDetailsOverflowHeight = function(){
   var divProps = $('divProps'+id);
   if (divWrapper && divHeader && divFooter && divProps) { 
     var height = divWrapper.clientHeight - divHeader.clientHeight - divFooter.clientHeight;
+    GLog.write(height);
     divProps.style.height = height + 'px';
   }
 }
