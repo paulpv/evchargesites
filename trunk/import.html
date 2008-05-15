@@ -1,0 +1,339 @@
+<html>
+  <head>
+    <title>EV Charge Sites DB Import</title>
+    
+    <script type="text/javascript" src="/static/js/third_party/json2.js"></script>
+    <script type="text/javascript" src="/static/js/common.js"></script>
+    <script type="text/javascript" src="/static/js/client.js"></script>
+    <script type="text/javascript">
+
+    function init(){
+      
+      // TODO(pv): Detect IE and alert('This page makes extensive use of E4X and thus will not work in IE!');
+      renderSiteList();
+    }
+    
+    function showProgress(show){
+      showId('loading', show);
+      showId('listSites', !show); 
+    }
+    
+    function renderSiteList(){
+      showProgress(true);
+      server.GetSites(renderCallback);
+    }
+    
+    function renderCallback(rs){
+      
+      // TODO(pv): Pageinate these results?
+
+      var i;
+      var cols = rs.columns;
+      var rows = rs.rows;
+      
+      if (rows.length==0){
+        $('listSites').innerHTML = '<center><h2>No data.  You will need to import some.</h2></center>';
+        showProgress(false);
+        return;  
+      }
+      
+      var table = <table id='tableSites' width='100%' border='1' cellpadding='0' cellspacing='0'><tr/></table>;
+      for each(var col in cols){
+        table.tr.td += <td align='center'>{col}</td>;
+      }
+      table.tr.td += <td align='center'>Commands</td>;
+
+      var tr;
+      for each (var row in rows){
+        var site = row;
+        var key;       
+        for(i=0; i<cols.length; i++){
+          var val = site[i]
+          if (i==0){
+            key = val;          
+            tr = <tr id={'row'+key}/>;
+            tr.td += <td align='right' nowrap='true' width='1%'>
+                <input type='checkbox' id={'check' + key}/>{key}                
+                </td>;
+          } else {
+            tr.td += <td>{val}</td>;
+          }
+        }
+        tr.td += <td align='center' nowrap='true' width='1%'>
+            <input type='button' value='Delete' id={'btnDelete' + key} onclick={'confirmDeleteSite("' + key + '")'} style='width:100%'/>
+          </td>;
+        table.tr += tr;
+      }
+      
+      // Last row: Add New...
+      tr = <tr id='rowNew'>
+          <td align='center'><input type='button' value={'* (' + rows.length + ')'} onclick='selectAllSites()' style='width:100%'/></td>
+        </tr>;
+      for(i=1; i<cols.length; i++){
+        tr.td += <td>
+            <textarea id={'text'+col} style='width:100%'> </textarea>
+          </td>;
+      }
+      tr.td += <td align='center' nowrap='true'>
+            <input id='btnAdd' type='button' value='Add' onclick='addSite()'/>
+            <input id='btnDeleteSelected' type='button' value='Delete Selected' onclick='deleteSelected()'/>
+          </td>;
+      table.tr += tr;
+      
+      $('listSites').innerHTML = table.toString();
+      showProgress(false);
+    }
+
+    function domToE4X(element){
+      return new XML((new XMLSerializer()).serializeToString(element));
+    }
+
+    function getRowCheckboxInput(row){
+      return row.cells[0].firstChild.nextSibling;
+    }
+
+    function getRowId(row){
+      var input = getRowCheckboxInput(row);
+      return input.id.substr(5);
+    }
+    
+    function selectAllSites(){
+      var table = $('tableSites');
+      var rows = table.rows;
+      for(var i=1; i<rows.length-1; i++){
+        var id = getRowId(rows[i]);
+        $('check' + id).checked = true;
+      }
+    }
+
+    function addSite(jsonObject, batch){
+      if (jsonObject == null) 
+        jsonObject = $('jsonObjectToAdd').value;
+      batch = (batch == true);
+      
+      var rowId = $('rowNew');
+      var props = getInputProperties(rowId);
+      if (props){
+        if (batch) 
+          $('btnAdd').disabled = true;
+        //server.AddSite(props);
+        if (batch) {
+          renderSiteList();
+          $('btnAdd').disabled = false;
+        }
+      }
+    }
+    
+    function getInputProperties(rowElement){
+      var props;
+      var tr = domToE4X(rowElement);
+      if (tr){
+        props = {};
+        var inputs = tr..TD..TEXTAREA;
+        for(var i in inputs){
+          var input = inputs[i];
+          var inputId = input.@id.toString();
+          var key = inputId.substring(4,inputId.length-1);
+          var value = $(inputId).value;
+          props[key]=value;
+        }
+      }
+      return props;
+    }
+
+    function deleteSite(id, refresh){
+      $('btnDelete' + id).disabled = true;
+      server.DeleteSite(id);
+      if (refresh != false) 
+        renderSiteList();
+    }
+
+    function confirmDeleteSite(id){
+      if (confirm("Are you sure you want to delete site #" + id + "?")) {
+        deleteSite(id);
+        renderSiteList();
+      }
+    }
+        
+    function deleteSelected(){
+      $('btnDeleteSelected').disabled = true;
+      var numDeleted = 0;
+      var table = $('tableSites');
+      var rows = table.rows;
+      for(var i=1; i<rows.length-1; i++){
+        var id = getRowId(rows[i]);
+        if ($('check' + id).checked){
+          numDeleted++;
+          deleteSite(id, false);
+        }
+      }
+      if (numDeleted > 0)
+        renderSiteList();
+      else
+        $('btnDeleteSelected').disabled = false;
+    }    
+
+
+    //
+    // Code for importing data...
+    //
+
+    function importData(btnId, url, callbackForEach){
+      
+      var btn = $(btnId);
+      btn.disabled = true;
+      
+      if (confirm('Fetch the following URL?\n\n' + url)) {
+        // Proxy the cross-site download request to the server
+        server.GetUrl(url, function(response){
+          if (response.status_code == 200){
+          
+            var content = response.content;
+            var r;
+            
+            // Remove any xml header at beginning...
+            r = /^<\?xml.*?\?>.*?\n/i;
+            content = content.replace(r, '');
+            // Remove any xmlns attribute inside the root node... 
+            r = /^<(.*?) (xmlns=(?:".*?"|'.*?'))(.*?)>/i;            
+            content = content.replace(r, '<$1$3>');
+            
+            // Remove any existing xml header
+            var xml = new XML(content);
+            
+ 	          // TODO(pv): Would a progress dialog here be at all responsive?
+            var txt = 'Fetch was successful.\n\n' +
+            'Import will begin after you press OK.\n\n' +
+            'The import *WILL* result in duplicates of any previously imported data!\n\n' +
+            'NOTE: THIS MAY TAKE SEVERAL MINUTES TO COMPLETE!\n\n' +
+            'Are you sure you want to proceed w/ the import?';
+ 	          if (confirm(txt)) {
+              showProgress(true);
+              callbackForEach(xml, function(props){
+                var name = props.name;
+                var latlng = props.latlng;
+                delete props.name;
+                delete props.latlng;
+                server.AddSite(name, latlng, props);
+              });
+              renderSiteList();
+            }
+	        }
+        });
+      }
+      
+      btn.disabled = false;
+    }
+
+    function xmlGetValue(root, tagname){
+      var node = root.getElementsByTagName(tagname);
+      if (node.length > 0) {
+        if (node[0].firstChild != null) {
+          return node[0].firstChild.nodeValue;
+        }
+      };
+      return "";
+    }
+    
+    function importEVChargerMaps(){
+      importData('btnImportEVChargerMaps',
+          'http://www.evchargermaps.com/XMLs/sitesxml.xml',
+          function(xml, submitCallback){
+
+            var TechList = {
+              "spi": "SPI",
+              "avc": "Avcon",
+              "othercond": "Other",
+              "lpi": "LPI"
+            };
+            
+            for each (var site in xml.site){
+            
+              var types = {};
+              for (var key in TechList) {
+                var techName = TechList[key];
+                var techNode = site[key];
+                for (var j = 0; j < techNode.length; j++) {
+                  var techNodeInfo = techNode[j];
+                  // we expect either zero or one elements in list
+                  var techInfo = {
+                    number: parseInt(techNodeInfo.@number.toString() || 0),
+                    up: parseInt(techNodeInfo.@up.toString() || 0),
+                    down: parseInt(techNodeInfo.@down.toString() || 0),
+                    marginal: parseInt(techNodeInfo.@marginal.toString() || 0),
+                  };
+                  techInfo['unknown'] = Math.min(0, techInfo.number - techInfo.up - techInfo.down - techInfo.marginal);
+                  types[techName] = techInfo;
+                }
+              }
+              
+              var props = {
+                name:site.id.toString(),
+                address:site.address.toString() + " \n" + site.city.toString(),
+                description:site.name.toString(),
+                latlng:'('+site.latlng.toString()+')',
+                restricted: site.restricted.toString(),
+                status: site.status.toString(), // Up, Down, Marginal?
+                pay: site.pay.toString(),
+                types: types,
+                comments: "TODO(pv): Implement comments",
+              };
+              
+              submitCallback(props);
+            }
+          });
+    }
+        
+    function importNWChargerSites(){
+      importData('btnImportNWChargeSites',
+          'http://maps.google.com/maps/ms?ie=UTF8&hl=en&oe=UTF8&msa=0&msid=106101835885297831085.00044b128b91711066112&output=kml',
+          function(xml, submitCallback){
+            for each (var placemark in xml.Document.Placemark) {
+            
+              var coords = placemark.Point.coordinates.toString().split(',');
+
+              var name = placemark.name.toString();
+              var address = "TBD: Please manually move from description";
+              var description = placemark.description.toString();
+              var latlng = '('+coords[1] + ',' + coords[0]+')';
+              
+              var props = {
+                name: name,
+                address: address,
+                description: description,
+                latlng: latlng,
+              };
+
+              submitCallback(props);
+            }
+          });
+    }
+         
+    </script>
+  </head>
+  <body onload='init()'>
+    <h1 align='center'><a href='/'>EV Charge Sites</a> DB Import</h1>
+    <table width='100%' border='0'>
+      <tr>
+        <td align='center' colspan='2'><input type='button' style='width:100%' value='Refresh' onclick='renderSiteList()'/></td>
+      </tr>
+      <tr>
+        <td align='center' colspan='2'>
+          <div id='loading'><center><img src="/static/img/loading.gif"/></center></div>
+         <div id='listSites' style='display:none'></div>
+        </td>        
+      </tr>
+      <tr>
+        <td align='center' colspan='2'><input type='button' style='width:100%' value='Refresh' onclick='renderSiteList()'/></td>
+      </tr>
+      <tr>
+        <td align='center'>
+          <input id='btnImportEVChargerMaps' type='button' style='width:100%' value='Import EVChargerMaps' onclick='importEVChargerMaps()'/>
+        </td>
+         <td align='center'>
+           <input id='btnImportNWChargeSites' type='button' style='width:100%' value='Import NW Charger Sites' onclick='importNWChargerSites()'/>
+         </td>
+      </tr>
+    </table>
+  </body>
+</html>
