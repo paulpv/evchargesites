@@ -252,68 +252,63 @@ ChargeSite.prototype.onClick = function(){
 
 ChargeSite.prototype.makeDetailsTab = function(details){
 	var id = this.id;
-  var div = $('propsWrapper'+id);
-  if (!div) {
-	  // Sad that IE does not support E4X! :(
-	  // Is DOM really faster/safer than raw text/html?
-	  var dom = document.createElement('div');
-	  dom.setAttribute('id', 'propsWrapper'+id);
-	  dom.setAttribute('style', 'width:400px;');
-	  // TODO(pv): Create a proper DOM for the below HTML; until then...
-	  var template = '' +
-				'<table width="100%;">' +
-				'  <tr id="propsHeader{0}">' +
-				'    <td><font size="5"><b>Site #{0}</b></font></td>' +
-				'    <td align="right"><font size="2">Created by: {1}</font></td>' +
-				'  </tr>' +
-				'  <tr>' +
-				'    <td colspan="2" style="height:100%;" valign="top">' +
-				'      <div id="divProps{0}" style="overflow-y:auto;">' +
-				'      <table border="1">' +
-				'        <tr>' +
-				'          <td valign="top" align="right"><b>Name:</b></td>' +
-				'          <td valign="top" style="width:100%;"><span id="name{0}">{2}</span></td>' +
-				'        </tr>' +
-				'        <tr>' +
-				'          <td valign="top" align="right"><b>Address:</b></td>' +
-				'          <td valign="top"><span id="address{0}">{3}</span></td>' +
-				'        </tr>' +
-				'        <tr>' +
-				'          <td valign="top" align="right"><b>Phone:</b></td>' +
-				'          <td valign="top"><span id="phone{0}">{4}</span></td>' +
-				'        </tr>' +
-				'        <tr>' +
-				'          <td valign="top" align="right"><b>Description:</b></td>' +
-				'          <td valign="top"><span id="description{0}">{5}</span></td>' +
-				'        </tr>' +
-				'      </table>' +
-				'      </div>' +
-				'    </td>' +
-				'  </tr>' +
-				'  <tr id="propsFooter{0}">' +
-				'    <td colspan="2">' +
-				'      <table width="100%;">' +
-				'        <tr>' +
-				'          <td align="left">' +
-				'            <input type="button" value="Blow Up" onclick="selectedSite.showMapBlowup()"/>' +
-				'          </td>' +
-				'          <td align="right">' +
-				'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
-				'            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
-				'          </td>' +
-				'        </tr>' +
-				'      </table>' +
-				'    </td>' +
-				'  </tr>' +
-				'</table>';
-		dom.innerHTML = template.format(
-				      id,
-				      textToHTML(details.userCreator), // document.createTextNode(   
-				      textToHTML(details.name),
-				      textToHTML(details.address),
-				      textToHTML(details.phone),
-				      textToHTML(details.description));
-  }
+  // Sad that IE does not support E4X! :(
+  var dom = document.createElement('div');
+  dom.setAttribute('id', 'propsWrapper'+id);
+  dom.setAttribute('style', 'width:400px;');
+  // TODO(pv): Would it be better/faster to DOM of below HTML?
+  var template = '<table width="100%;">' +
+			'  <tr id="propsHeader{0}">' +
+			'    <td><font size="5"><b>Site #{0}</b></font></td>' +
+			'    <td align="right"><font size="2">Created by: {1}</font></td>' +
+			'  </tr>' +
+			'  <tr>' +
+			'    <td colspan="2" style="height:100%;" valign="top">' +
+			'      <div id="divProps{0}" style="overflow-y:auto;">' +
+			'      <table border="1">' +
+			'        <tr>' +
+			'          <td valign="top" align="right"><b>Name:</b></td>' +
+			'          <td valign="top" style="width:100%;"><span id="name{0}">{2}</span></td>' +
+			'        </tr>' +
+			'        <tr>' +
+			'          <td valign="top" align="right"><b>Address:</b></td>' +
+			'          <td valign="top"><span id="address{0}">{3}</span></td>' +
+			'        </tr>' +
+			'        <tr>' +
+			'          <td valign="top" align="right"><b>Phone:</b></td>' +
+			'          <td valign="top"><span id="phone{0}">{4}</span></td>' +
+			'        </tr>' +
+			'        <tr>' +
+			'          <td valign="top" align="right"><b>Description:</b></td>' +
+			'          <td valign="top"><span id="description{0}">{5}</span></td>' +
+			'        </tr>' +
+			'      </table>' +
+			'      </div>' +
+			'    </td>' +
+			'  </tr>' +
+			'  <tr id="propsFooter{0}">' +
+			'    <td colspan="2">' +
+			'      <table width="100%;">' +
+			'        <tr>' +
+			'          <td align="left">' +
+			'            <input type="button" value="Blow Up" onclick="selectedSite.showMapBlowup()"/>' +
+			'          </td>' +
+			'          <td align="right">' +
+			'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
+			'            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
+			'          </td>' +
+			'        </tr>' +
+			'      </table>' +
+			'    </td>' +
+			'  </tr>' +
+			'</table>';
+	dom.innerHTML = template.format(
+			      id,
+			      textToHTML(details.userCreator), // document.createTextNode(   
+			      textToHTML(details.name),
+			      textToHTML(details.address),
+			      textToHTML(details.phone),
+			      textToHTML(details.description));
   return dom;
 }
 
@@ -457,7 +452,8 @@ ChargeSite.prototype.toggleEditMode = function(save){
 	      phone:$('editPhone').value,
 	      description:$('editDescription').value
 	      };
-	    
+
+      // Server won't accept '', but will access null; replace	    
 	    for (var key in site){
 	    	var val = site[key];
 	    	if (val == ''){
@@ -466,36 +462,32 @@ ChargeSite.prototype.toggleEditMode = function(save){
 	    }
 
       DBG('Saving #'+this.id+':'+JSON.stringify(site));
-	
-	    $('name' + id).innerHTML = textToHTML(site.name);
-	    $('address' + id).innerHTML = textToHTML(site.address);
-	    $('phone' + id).innerHTML = textToHTML(site.phone);
-	    $('description' + id).innerHTML = textToHTML(site.description);
-	      
       if (this.newsite){
-        server.AddSite(site, function(site){
+        server.AddSite(site, bind(this, function(site){
           DBG('Site #'+site.id+' Saved');
-        });
+          this.renderText(site);
+        }));
       } else {
-        server.UpdateSite(this.id, site, function(site){
+        server.UpdateSite(this.id, site, bind(this, function(site){
           DBG('Site #'+site.id+' Saved');
-        });
+          this.renderText(site);
+        }));
       }
-      
     } else {
-      
       DBG('Site #'+this.id+': No changes to save; getting the latest');
-      
-      this.getDetails(function(site){
-      	var id = site.id;
-	      $('name' + id).innerHTML = textToHTML(site.name);
-	      $('address' + id).innerHTML = textToHTML(site.address);
-	      $('phone' + id).innerHTML = textToHTML(site.phone);
-	      $('description' + id).innerHTML = textToHTML(site.description);
-      });
-      
+      this.getDetails(bind(this, function(site){
+      	this.renderText(site);
+      }));
     }
   }
 
   btnOne.disabled = btnTwo.disabled = false;
+}
+
+ChargeSite.prototype.renderText = function(site){
+  var id = site.id;
+  $('name' + id).innerHTML = textToHTML(site.name);
+  $('address' + id).innerHTML = textToHTML(site.address);
+  $('phone' + id).innerHTML = textToHTML(site.phone);
+  $('description' + id).innerHTML = textToHTML(site.description);
 }
