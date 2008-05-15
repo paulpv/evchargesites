@@ -15,6 +15,8 @@ var selectedSite = null;
 function textToHTML(text){
   if (text) {
     text = text.replace(/\n/g, '<br>\n');
+  } else {
+  	text = '&nbsp;'
   }
   return text;
 }
@@ -258,52 +260,53 @@ ChargeSite.prototype.makeDetailsTab = function(details){
 	  dom.setAttribute('id', 'propsWrapper'+id);
 	  dom.setAttribute('style', 'width:400px;');
 	  // TODO(pv): Create a proper DOM for the below HTML; until then...
-	  dom.innerHTML = ' \
-				<table style="width:100%; height:100%;"> \
-				  <tr id="propsHeader{0}"> \
-				    <td><font size="5"><b>Site #{0}</b></font></td> \
-				    <td align="right"><font size="2">Created by: {1}</font></td> \
-				  </tr> \
-				  <tr id="propsDetails{0}"> \
-				    <td colspan="2" style="height:100%;" valign="top"> \
-				      <div id="divProps{0}" style="overflow:auto; height:100%;"> \
-				      <table style="width:100%;" border="1"> \
-				        <tr> \
-				          <td valign="top"><b>Name:</b></td> \
-				          <td valign="top" style="width:100%;"><div id="name{0}">{2}</div></td> \
-				        </tr> \
-				        <tr> \
-				          <td valign="top"><b>Address:</b></td> \
-				          <td valign="top"><div id="address{0}">{3}</div></td> \
-				        </tr> \
-				        <tr> \
-				          <td valign="top"><b>Phone:</b></td> \
-				          <td valign="top"><div id="phone{0}">{4}</div></td> \
-				        </tr> \
-				        <tr> \
-				          <td valign="top"><b>Description:</b></td> \
-				          <td valign="top"><div id="description{0}">{5}</div></td> \
-				        </tr> \
-				      </table> \
-				      </div> \
-				    </td> \
-				  </tr> \
-				  <tr id="propsFooter{0}"> \
-				    <td colspan="2"> \
-				      <table style="width:100%;"> \
-				        <tr> \
-				          <td align="left"> \
-				            <input type="button" value="Blow Up" onclick="selectedSite.showMapBlowup()"/> \
-				          </td> \
-				          <td align="right"> \
-				            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/> \
-				            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/> \
-				          </td> \
-				        </tr> \
-				      </table> \
-				    </td> \
-				  </tr> \
-				</table>'.format(
+	  var template = '' +
+				'<table width="100%;">' +
+				'  <tr id="propsHeader{0}">' +
+				'    <td><font size="5"><b>Site #{0}</b></font></td>' +
+				'    <td align="right"><font size="2">Created by: {1}</font></td>' +
+				'  </tr>' +
+				'  <tr>' +
+				'    <td colspan="2" style="height:100%;" valign="top">' +
+				'      <div id="divProps{0}" style="overflow-y:auto;">' +
+				'      <table border="1">' +
+				'        <tr>' +
+				'          <td valign="top" align="right"><b>Name:</b></td>' +
+				'          <td valign="top" style="width:100%;"><span id="name{0}">{2}</span></td>' +
+				'        </tr>' +
+				'        <tr>' +
+				'          <td valign="top" align="right"><b>Address:</b></td>' +
+				'          <td valign="top"><span id="address{0}">{3}</span></td>' +
+				'        </tr>' +
+				'        <tr>' +
+				'          <td valign="top" align="right"><b>Phone:</b></td>' +
+				'          <td valign="top"><span id="phone{0}">{4}</span></td>' +
+				'        </tr>' +
+				'        <tr>' +
+				'          <td valign="top" align="right"><b>Description:</b></td>' +
+				'          <td valign="top"><span id="description{0}">{5}</span></td>' +
+				'        </tr>' +
+				'      </table>' +
+				'      </div>' +
+				'    </td>' +
+				'  </tr>' +
+				'  <tr id="propsFooter{0}">' +
+				'    <td colspan="2">' +
+				'      <table width="100%;">' +
+				'        <tr>' +
+				'          <td align="left">' +
+				'            <input type="button" value="Blow Up" onclick="selectedSite.showMapBlowup()"/>' +
+				'          </td>' +
+				'          <td align="right">' +
+				'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
+				'            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
+				'          </td>' +
+				'        </tr>' +
+				'      </table>' +
+				'    </td>' +
+				'  </tr>' +
+				'</table>';
+		dom.innerHTML = template.format(
 				      id,
 				      textToHTML(details.userCreator), // document.createTextNode(   
 				      textToHTML(details.name),
@@ -315,8 +318,15 @@ ChargeSite.prototype.makeDetailsTab = function(details){
 }
 
 ChargeSite.prototype.makeStreetViewTab = function(details){
+	var id = this.id;
   var dom = document.createElement('div');
-  dom.appendChild(document.createTextNode('TODO(pv): Street View (if available)'));
+  dom.setAttribute('id', 'streetView'+id);
+  dom.setAttribute('style', 'width:400px;');
+  dom.innerHTML = '<table border="1" style="margin-left:auto;margin-right:auto;">'+
+      '<tr><td valign="middle" align="center">' +
+  		'TODO(pv): StreetView (if available)' +
+  		'</td></tr>' +
+  		'</table>';
   return dom;
   
   //
@@ -400,8 +410,7 @@ ChargeSite.prototype.calcDetailsOverflowHeight = function(){
   var divFooter = $('propsFooter'+id);
   var divProps = $('divProps'+id);
   if (divWrapper && divHeader && divFooter && divProps) { 
-    var height = divWrapper.clientHeight - divHeader.clientHeight - divFooter.clientHeight;
-    GLog.write(height);
+    var height = divWrapper.offsetHeight - divHeader.offsetHeight - divFooter.offsetHeight;
     divProps.style.height = height + 'px';
   }
 }
@@ -427,18 +436,18 @@ ChargeSite.prototype.toggleEditMode = function(save){
         $('phone' + id).innerHTML = '<input type="text" style="width:100%" id="editPhone" value="' + site.phone + '"/>';
         $('description' + id).innerHTML = '<textarea style="width:100%" rows="5" id="editDescription">' + site.description + '</textarea>';
         
-        btnOne.setAttribute('value', 'Cancel');
-        btnOne.setAttribute('onclick','selectedSite.toggleEditMode(false)');
-        btnTwo.setAttribute('value', 'Save');
-        btnTwo.setAttribute('onclick','selectedSite.toggleEditMode(true)');
+        btnOne.value = 'Cancel';
+        btnOne.onclick = function() { selectedSite.toggleEditMode(false); };
+        btnTwo.value = 'Save';
+        btnTwo.onclick = function() { selectedSite.toggleEditMode(true); };
       });
     
   } else {
   	    
-    btnOne.setAttribute('value', 'Edit');
-    btnOne.setAttribute('onclick','selectedSite.toggleEditMode(true)');
-    btnTwo.setAttribute('value', 'Delete');
-    btnTwo.setAttribute('onclick','selectedSite.confirmDeleteSite()');
+    btnOne.value = 'Edit';
+    btnOne.onclick = function() { selectedSite.toggleEditMode(true); };
+    btnTwo.value = 'Delete';
+    btnTwo.onclick = function() { selectedSite.confirmDeleteSite(); };
 
     if (save){
 	    
