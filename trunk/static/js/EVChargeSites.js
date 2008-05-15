@@ -203,7 +203,7 @@ ChargeSite.prototype.onDragEnd = function(){
   	// Nothing to do: We haven't saved the site yet, so no need update the server
   } else {
     var json = {
-      latlng: this.marker.getLatLng().toString(),
+      latlng: this.marker.getLatLng().toString()
     };
     server.UpdateSite(this.id, json, bind(this, function(site){
     	this.latlng = site.latlng;
@@ -231,7 +231,7 @@ ChargeSite.prototype.getDetails = function(callback){
 	    name:null,
 	    address:null,
 	    phone:null,
-	    description:null,
+	    description:null
 	  };
     DBG('New:'+JSON.stringify(json));
 	  callback(json);
@@ -445,7 +445,7 @@ ChargeSite.prototype.toggleEditMode = function(save){
 	      name:$('editName').value,
 	      address:$('editAddress').value,
 	      phone:$('editPhone').value,
-	      description:$('editDescription').value,
+	      description:$('editDescription').value
 	      };
 	    
 	    for (var key in site){

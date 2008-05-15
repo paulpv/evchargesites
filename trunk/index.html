@@ -32,29 +32,27 @@
 	  }
 	</style>
 
-<script type="text/javascript" src="./static/js/third_party/json2.js"></script>
-<script type="text/javascript" src="./static/js/common.js"></script>
+<script type="text/javascript" src="/static/js/third_party/json2.js"></script>
+<script type="text/javascript" src="/static/js/common.js"></script>
 
 <!--  BEGIN Google Analytics code -->
 <script type="text/javascript">//<![CDATA[
 includeGoogleAnalytics();
-//]]>
-</script>
+//]]></script>
 <script type="text/javascript">//<![CDATA[
 addPageTracker("UA-4277916-1");
-//]]>
-</script>
+//]]></script>
 <!--  END Google Analytics code -->
 
 <script type="text/javascript" src="http://www.google.com/jsapi?key={{api_key}}"></script>
 <script type="text/javascript">//<![CDATA[
 google.load("maps", "2.x");
 //]]></script>
-<script type="text/javascript" src="./static/js/third_party/ClusterMarker/obfuscated/ClusterMarker.js"></script>
-<script type="text/javascript" src="./static/js/third_party/dragzoom/1.2/src/dragzoom.js"></script>
-<script type="text/javascript" src="./static/js/client.js"></script>
-<script type="text/javascript" src="./static/js/EVChargeSites.js"></script>
-<script type="text/javascript" src="./static/js/Controls.js"></script>
+<script type="text/javascript" src="/static/js/third_party/ClusterMarker/obfuscated/ClusterMarker.js"></script>
+<script type="text/javascript" src="/static/js/third_party/dragzoom/1.2/src/dragzoom.js"></script>
+<script type="text/javascript" src="/static/js/client.js"></script>
+<script type="text/javascript" src="/static/js/EVChargeSites.js"></script>
+<script type="text/javascript" src="/static/js/Controls.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 var DEBUG = false;
@@ -129,11 +127,11 @@ function onLoad(){
 	}
 	
 	var googleBarOptions = {
-	  showOnLoad: true,
+	  showOnLoad: true
 	};
 	var mapOpts = {
 	  mapTypes: G_DEFAULT_MAP_TYPES | G_PHYSICAL_MAP,
-	  googleBarOptions: googleBarOptions,
+	  googleBarOptions: googleBarOptions
 	};
 	map = new GMap2($("map"), mapOpts);
 	map.setCenter(new GLatLng(appOpts.lat, appOpts.lng), appOpts.zoom);
@@ -236,7 +234,7 @@ function onUnload(){
       svLng: svLatLng.lng(),
       svYaw: appOpts.svYaw,
       svPitch: appOpts.svPitch,
-      svZoom: appOpts.svZoom,
+      svZoom: appOpts.svZoom
     }
     
     if (svPanorama) {
@@ -398,7 +396,7 @@ function drawSvMarkerAngle(){
 //]]></script>
 </head>
 
-<body onload="onLoad();" onunload="onUnload();">
+<body onload="onLoad()" onunload="onUnload()">
   <div id="map">
   </div>
   <div id="loading">
