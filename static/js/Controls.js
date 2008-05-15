@@ -79,7 +79,7 @@ AdminControl.prototype.initialize = function(map) {
   container.appendChild(divSource);
   divSource.appendChild(document.createTextNode("Source"));
   GEvent.addDomListener(divSource, "click", function() {
-    document.location = "http://code.google.com/p/evchargersites/";
+    document.location = "http://code.google.com/p/evchargesites/";
   });
   
   if (this.url_admin){
