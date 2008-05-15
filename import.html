@@ -8,8 +8,6 @@
     <script type="text/javascript">
 
     function init(){
-      
-      // TODO(pv): Detect IE and alert('This page makes extensive use of E4X and thus will not work in IE!');
       renderSiteList();
     }
     
@@ -260,7 +258,7 @@
                     number: parseInt(techNodeInfo.@number.toString() || 0),
                     up: parseInt(techNodeInfo.@up.toString() || 0),
                     down: parseInt(techNodeInfo.@down.toString() || 0),
-                    marginal: parseInt(techNodeInfo.@marginal.toString() || 0),
+                    marginal: parseInt(techNodeInfo.@marginal.toString() || 0)
                   };
                   techInfo['unknown'] = Math.min(0, techInfo.number - techInfo.up - techInfo.down - techInfo.marginal);
                   types[techName] = techInfo;
@@ -276,7 +274,7 @@
                 status: site.status.toString(), // Up, Down, Marginal?
                 pay: site.pay.toString(),
                 types: types,
-                comments: "TODO(pv): Implement comments",
+                comments: "TODO(pv): Implement comments"
               };
               
               submitCallback(props);
@@ -301,7 +299,7 @@
                 name: name,
                 address: address,
                 description: description,
-                latlng: latlng,
+                latlng: latlng
               };
 
               submitCallback(props);
