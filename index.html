@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  <title>EV Charge Sites</title>
+	<style type="text/css">
+	  html, body { width: 100%; height: 100%; }
+	  html {overflow: hidden}
+	  body { margin-top: 0px; margin-right: 0px; margin-left: 0px; margin-bottom: 0px; }
+	  
+	  #map {
+	      position: absolute;
+	      z-index: 1;
+	      width: 100%;
+	      height: 100%;
+	      margin-top: 0px;
+	      margin-right: 0px;
+	      margin-left: 0px;
+	      margin-bottom: 0px;
+	  }
+	  
+	  #loading {
+	      position: fixed;
+	      z-index: 2;
+	      display: inline;
+	      padding: 0px 0px;
+	      top: 50%;
+	      left: 50%;
+	      margin-top: -50px; /* -50px hard coded for loading.gif */
+	      margin-left: -50px; /* -50px hard coded for loading.gif */
+	  }
+	</style>
+
+<script type="text/javascript" src="./static/js/third_party/json2.js"></script>
+<script type="text/javascript" src="./static/js/common.js"></script>
+
+<!--  BEGIN Google Analytics code -->
+<script type="text/javascript">//<![CDATA[
+includeGoogleAnalytics();
+//]]>
+</script>
+<script type="text/javascript">//<![CDATA[
+addPageTracker("UA-4277916-1");
+//]]>
+</script>
+<!--  END Google Analytics code -->
+
+<script type="text/javascript" src="http://www.google.com/jsapi?key={{api_key}}"></script>
+<script type="text/javascript">//<![CDATA[
+google.load("maps", "2.x");
+//]]></script>
+<script type="text/javascript" src="./static/js/third_party/ClusterMarker/obfuscated/ClusterMarker.js"></script>
+<script type="text/javascript" src="./static/js/third_party/dragzoom/1.2/src/dragzoom.js"></script>
+<script type="text/javascript" src="./static/js/client.js"></script>
+<script type="text/javascript" src="./static/js/EVChargeSites.js"></script>
+<script type="text/javascript" src="./static/js/Controls.js"></script>
+<script type="text/javascript">//<![CDATA[
+
+var DEBUG = false;
+
+function DBG(text){
+  if (DEBUG)
+    GLog.write(text);
+}
+
+// === Some cookie parameters ===
+var cookiename = "mapinfo";
+var expiredays = 365; // TODO(pv): Better persistance of User Preferences
+// === Default values to use if there is no cookie ===
+var defaultAppOpts = {
+  lat: 0,
+  lng: 0,
+  zoom: 2,
+  maptype: 0,
+  svLat: 39,
+  svLng: -98,
+  svYaw: 0,
+  svPitch: 0,
+  svZoom: 0
+};
+var appOpts = defaultAppOpts;
+
+var map = null;
+var keyboard;
+var svClient;
+var svOverlay = null;
+var svMarker;
+var lastSvMarkerLocation;
+var svPanorama;
+var siteman;
+var current_user = "{{current_user}}";
+var is_authenticated = {% if current_user %}true{% else %}false{% endif %};
+var url_auth = "{{url_auth}}";
+var url_admin = {% if url_admin %}"{{url_admin}}"{% else %}null{% endif %};
+var is_admin = url_admin != null;
+
+
+function onLoad(){
+
+  showLoading(true);
+
+	if (!GBrowserIsCompatible())
+	  return;
+	  
+	var newUser = true;
+	
+	// === Look for the cookie ===
+	var cookie = document.cookie;
+	if (cookie.length > 0) {
+	  var cookieEnd, cookieStart = cookie.indexOf(cookiename + "=");
+	  if (cookieStart != -1) {
+	    newUser = false;
+	    DBG('cookie=' + cookie);
+	    cookieStart += cookiename.length + 1;
+	    cookieEnd = cookie.indexOf(";", cookieStart);
+	    if (cookieEnd == -1) {
+	      cookieEnd = cookie.length;
+	    }
+	    var txtAppOpts = cookie.substring(cookieStart, cookieEnd);
+	    DBG('cookie payload=' + txtAppOpts);
+	    appOpts = JSON.parse(txtAppOpts);
+	  }
+	}
+	DBG('appOpts=' + JSON.stringify(appOpts));
+	
+	if (newUser){
+	  alert('TODO(pv): Welcome new user!');
+	}
+	
+	var googleBarOptions = {
+	  showOnLoad: true,
+	};
+	var mapOpts = {
+	  mapTypes: G_DEFAULT_MAP_TYPES | G_PHYSICAL_MAP,
+	  googleBarOptions: googleBarOptions,
+	};
+	map = new GMap2($("map"), mapOpts);
+	map.setCenter(new GLatLng(appOpts.lat, appOpts.lng), appOpts.zoom);
+	map.enableGoogleBar(); // TODO: Can this control be relocated?
+	 
+	var maptypes = map.getMapTypes();
+	for (var i=0; i < maptypes.length; i++) {
+	  if (i == appOpts.maptype){
+	    map.setMapType(maptypes[i]);
+	    break;              
+	  }
+	}
+
+  // This takes awhile to load, so have it happen async...
+  siteman = new SitesManager(map, current_user, is_authenticated, is_admin);
+  window.setTimeout('siteman.loadMarkers()', 0);
+
+  map.addControl(new GMapTypeControl());
+  map.addControl(new GLargeMapControl());
+  map.addControl(new GOverviewMapControl());
+  map.addControl(new GScaleControl(),
+      new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(70, 7)));
+  map.enableScrollWheelZoom();
+  //map.enableContinuousZoom(); // Slows down client?
+  //map.disableDoubleClickZoom(); // TODO(pv): Conflicts w/ svMarker.dblclick event
+  map.addControl(new UserControl(is_authenticated, url_auth));
+  map.addControl(new AdminControl(url_admin));
+
+  keyboard = new GKeyboardHandler(map);  
+  /*
+  var divLogon = $('divLogon');
+  var btnLogon = $('btnLogon');
+  var pos = new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(8,16+btnLogon.clientHeight));
+  pos.apply(divLogon);
+  map.getContainer().appendChild(divLogon);
+  */
+
+  createZoomControl();
+
+  svClient = new GStreetviewClient();
+  toggleSvOverlay();
+  
+  var svLatLng = new GLatLng(appOpts.svLat, appOpts.svLng);
+  var carIcon = new GIcon(G_DEFAULT_ICON);
+  carIcon.image = "./static/img/markers/cab.png";
+  carIcon.shadow = "./static/img/markers/cab-shadow.png";
+  carIcon.iconSize = new GSize(32, 32);
+  carIcon.shadowSize = new GSize(49.0, 32.0);
+  carIcon.iconAnchor = new GPoint(16, 32);
+  carIcon.infoWindowAnchor = new GPoint(14, 11);
+  carIcon.imageMap = [
+      00,16, // left mirrow
+      06,06, // left roof
+      13,03,18,03, // dome
+      25,06, // right roof
+      31,16, // right mirror
+      31,26, // right floor
+      27,31,24,31,22,29,22,27, // right wheel
+      09,27,09,29,07,31,04,31, // left wheel
+      00,26]; // left floor
+  svMarker = new GMarker(svLatLng, {
+    icon: carIcon,
+    draggable: true
+  });
+  GEvent.addListener(svMarker, "dragend", onDragEnd);
+  //GEvent.addListener(svMarker, "dblclick", function() { map.setCenter(svMarker.getLatLng(), 10); });
+  GEvent.addListener(svMarker, "click", onSvClick);
+  map.addOverlay(svMarker);
+  //drawSvMarkerAngle(); // TODO(pv): Optimize the SVMarker initialization/refresh
+  
+  // Monitor the window resize event and let the map know when it occurs
+  if (window.attachEvent) { 
+    window.attachEvent("onresize", function() {this.map.checkResize()} );
+  } else {
+    window.addEventListener("resize", function() {this.map.checkResize()} , false);
+  }
+}
+
+function onUnload(){
+
+  if (GBrowserIsCompatible() && map && svMarker) {
+  
+    var maptype = defaultAppOpts.maptype;
+    var maptypes = map.getMapTypes();
+    for (var i = 0; i < maptypes.length; i++) {
+      if (map.getCurrentMapType() == maptypes[i]) {
+        maptype = i;
+        break;
+      }
+    }
+    var mapLatLng = map.getCenter();
+    var svLatLng = svMarker.getLatLng();
+    
+    appOpts = {
+      maptype: maptype,
+      lat: mapLatLng.lat(),
+      lng: mapLatLng.lng(),
+      zoom: map.getZoom(),
+      svLat: svLatLng.lat(),
+      svLng: svLatLng.lng(),
+      svYaw: appOpts.svYaw,
+      svPitch: appOpts.svPitch,
+      svZoom: appOpts.svZoom,
+    }
+    
+    if (svPanorama) {
+      var pov = svPanorama.getPOV();
+      appOpts.vsYaw = pov.yaw;
+      appOpts.vsPitch = pov.pitch;
+      appOpts.vsZoom = pov.zoom;
+    }
+
+    GUnload();
+    
+  } else {
+    appOpts = defaultAppOpts;
+  }
+  
+  var txtAppOpts = JSON.stringify(appOpts);
+  var cookietext = cookiename + "=" + txtAppOpts;
+  if (expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    cookietext += ";expires=" + exdate.toGMTString();
+  }
+  document.cookie = cookietext;
+}
+
+
+//
+//
+//
+function createZoomControl() {
+
+  var boxStyleOpts = { opacity:0.2, border: "2px solid yellow" };
+  var otherOpts = {
+    buttonHTML: "<img src='/static/img/zoom-control-inactive.png' />",
+    buttonZoomingHTML: "<img src='/static/img/zoom-control-active.png' />",
+    buttonStartingStyle: {width: '17px', height: '17px'},
+    overlayRemoveTime: 5,
+    stickyZoomEnabled: true
+  };
+  map.addControl(new DragZoomControl(boxStyleOpts, otherOpts, {}),
+      new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(7,7)));
+}
+
+//
+// StreetView Functions...
+// TODO(pv): Make all of the below code a self-contained object
+//
+function toggleSvOverlay(){
+  if (!svOverlay) {
+    svOverlay = new GStreetviewOverlay();
+    map.addOverlay(svOverlay);
+  } else {
+    map.removeOverlay(svOverlay);
+    svOverlay = null;
+  }
+}
+
+function onDragEnd(){
+  if (svPanorama) {
+    var latlng = svMarker.getLatLng();
+    svClient.getNearestPanorama(latlng, function(response){
+      if (response.code != 200) {
+        if (lastSvMarkerLocation)
+          svMarker.setLatLng(lastSvMarkerLocation);
+      } else {
+        var latlng = new GLatLng(response.Location.lat, response.Location.lng);
+        svMarker.setLatLng(latlng);
+        openPanoramaBubble();
+      }
+    });
+  }
+}
+
+function onSvClick(){
+
+	var latlng = svMarker.getLatLng();
+	svClient.getNearestPanorama(latlng, function(response){
+	  if (response.code != 200) {
+	    alert('No StreetView is available at this location...yet!');
+	  } else {	  
+	    var latlng = new GLatLng(response.Location.lat, response.Location.lng);
+	    svMarker.setLatLng(latlng);
+      openPanoramaBubble();
+     }
+   });
+}
+
+// Consolidate w/ SV code in ChargeSite
+function openPanoramaBubble(){
+
+  lastSvMarkerLocation = svMarker.getLatLng();
+
+  // TODO(pv): maxWidth seems to be capped ~700; find a way to increase
+  var contentNode = document.createElement('div');
+  contentNode.style.textAlign = 'center';
+  contentNode.style.width = '960px';
+  contentNode.style.height = '540px';
+  contentNode.innerHTML = 'Loading panorama';
+  
+  var infoOpts = {
+    maxWidth: 1000,
+    maxContent: contentNode,
+    maxTitle: "Full screen"
+  };
+  
+  svMarker.openInfoWindow("<div id='pano' style='width:640px;height:360px;'></div>");//, infoOpts);
+  svPanorama = new GStreetviewPanorama($('pano'));
+  
+  var pov = {
+    yaw: appOpts.svYaw,
+    pitch: appOpts.svPitch,
+    zoom: appOpts.svZoom
+  };
+  svPanorama.setLocationAndPOV(svMarker.getLatLng(), pov);
+  
+  GEvent.addListener(svPanorama, "initialized", onNewLocation);
+  GEvent.addListener(svPanorama, "yawchanged", onYawChange);
+  GEvent.addListener(svPanorama, "pitchchanged", onPitchChange);
+  GEvent.addListener(svPanorama, "zoomchanged", onZoomChange);
+  
+  var iw = map.getInfoWindow();
+  GEvent.addListener(iw, "maximizeend", function(){
+    svPanorama.setContainer(contentNode);
+    window.setTimeout("svPanorama.checkResize()", 5);
+  });
+}
+
+function onNewLocation(location){
+  // "location" is a GStreetviewLocation object
+  // TODO(pv): Make use of location.description/pov/panoId?
+  svMarker.setLatLng(location.latlng);
+}
+
+function onYawChange(newYaw){
+  appOpts.svYaw = newYaw;
+  //drawSvMarkerAngle();
+}
+
+function onPitchChange(newPitch){
+  appOpts.svPitch = newPitch;
+}
+
+function onZoomChange(newZoom){
+  appOpts.svZoom = newZoom;
+}
+
+// TODO(pv): Cool SGV FOV similar to ...
+function drawSvMarkerAngle(){
+  var GUY_NUM_ICONS = 16;
+  var GUY_ANGULAR_RES = 360 / GUY_NUM_ICONS;
+  if (appOpts.svYaw < 0) {
+    appOpts.svYaw += 360;
+  }
+  var guyImageNum = Math.round(appOpts.svYaw / GUY_ANGULAR_RES) % GUY_NUM_ICONS;
+  var guyImageUrl = "http://maps.google.com/intl/en_us/mapfiles/cb/man_arrow-" + guyImageNum + ".png";
+  svMarker.setImage(guyImageUrl);
+}
+
+//]]></script>
+</head>
+
+<body onload="onLoad();" onunload="onUnload();">
+  <div id="map">
+  </div>
+  <div id="loading">
+    <center>
+      <img src="./static/img/loading.gif"/>
+    </center>
+  </div>
+</body>
+</html>
