@@ -101,6 +101,7 @@ SitesManager.prototype.isEditable = function(site){
 	 ((this.current_user == site.userCreator.toLowerCase()) || this.is_admin || (this.current_user == site.contactUser.toLowerCase()))
 	 );
 }
+
 SitesManager.prototype.loadMarkers = function(){
   showLoading(true);
   this.dictMarkers = {};
@@ -146,13 +147,14 @@ function ChargeSite(id, name, latlng, type, editable, newsite){
 }
 
 ChargeSite.prototype.confirmCanModify = function(){
-  if (!this.editable){
+	var canModify = this.newsite || this.editable; 
+  if (!canModify){
     if (confirm('You must Log In as the site Creator, Contact, or Admin in order to perform this action.\n' +
       'Would you like to Log In now?')){
       document.location = url_auth;
     }
   }
-  return this.editable;
+  return canModify;
 }
 
 ChargeSite.prototype.deleteSite = function(id){
@@ -229,11 +231,12 @@ SitesManager.prototype.createNewSite = function(){
 ChargeSite.prototype.getDetails = function(callback){
   if (this.newsite){
 	  var json = {
-	    userCreator:null,
-	    name:null,
-	    address:null,
-	    phone:null,
-	    description:null
+	  	id:this.id,
+	    userCreator:siteman.current_user,
+	    name:'Please enter a name',
+	    address:'Please enter an address',
+	    phone:'Please enter a phone number',
+	    description:'Please enter a description'
 	  };
     DBG('New:'+JSON.stringify(json));
 	  callback(json);
@@ -411,38 +414,20 @@ ChargeSite.prototype.calcDetailsOverflowHeight = function(){
 }
 
 ChargeSite.prototype.toggleEditMode = function(save){
-	
+
 	if (!this.confirmCanModify())
 	  return;
 		
   var id = this.id;
-  var btnOne = $('btnOne'+id);
-  var btnTwo = $('btnTwo'+id);
-  
-  btnOne.disabled = btnTwo.disabled = true;
+  var editing = ($('btnTwo'+id).value == 'Save');
 
-  var editing = (btnTwo.value == 'Save');
   if (this.newsite || !editing) {
 
-    this.getDetails(function(site){
-        var id = site.id;
-        $('name' + id).innerHTML = '<input type="text" style="width:100%" id="editName" value="' + site.name + '"/>';
-        $('address' + id).innerHTML = '<textarea style="width:100%" rows="3" id="editAddress">' + site.address + '</textarea>';
-        $('phone' + id).innerHTML = '<input type="text" style="width:100%" id="editPhone" value="' + site.phone + '"/>';
-        $('description' + id).innerHTML = '<textarea style="width:100%" rows="5" id="editDescription">' + site.description + '</textarea>';
-        
-        btnOne.value = 'Cancel';
-        btnOne.onclick = function() { selectedSite.toggleEditMode(false); };
-        btnTwo.value = 'Save';
-        btnTwo.onclick = function() { selectedSite.toggleEditMode(true); };
-      });
+    this.getDetails(bind(this, function(site){
+    	this.renderText(site, false);
+    }));
     
   } else {
-  	    
-    btnOne.value = 'Edit';
-    btnOne.onclick = function() { selectedSite.toggleEditMode(true); };
-    btnTwo.value = 'Delete';
-    btnTwo.onclick = function() { selectedSite.confirmDeleteSite(); };
 
     if (save){
 	    
@@ -465,29 +450,48 @@ ChargeSite.prototype.toggleEditMode = function(save){
       if (this.newsite){
         server.AddSite(site, bind(this, function(site){
           DBG('Site #'+site.id+' Saved');
-          this.renderText(site);
+          this.renderText(site, true);
         }));
       } else {
         server.UpdateSite(this.id, site, bind(this, function(site){
           DBG('Site #'+site.id+' Saved');
-          this.renderText(site);
+          this.renderText(site, true);
         }));
       }
     } else {
       DBG('Site #'+this.id+': No changes to save; getting the latest');
       this.getDetails(bind(this, function(site){
-      	this.renderText(site);
+      	this.renderText(site, true);
       }));
     }
   }
-
-  btnOne.disabled = btnTwo.disabled = false;
 }
 
-ChargeSite.prototype.renderText = function(site){
+ChargeSite.prototype.renderText = function(site, staticText){
+
   var id = site.id;
-  $('name' + id).innerHTML = textToHTML(site.name);
-  $('address' + id).innerHTML = textToHTML(site.address);
-  $('phone' + id).innerHTML = textToHTML(site.phone);
-  $('description' + id).innerHTML = textToHTML(site.description);
+  var btnOne = $('btnOne'+id);
+  var btnTwo = $('btnTwo'+id);
+  
+  if (staticText){
+	  btnOne.value = 'Edit';
+	  btnOne.onclick = function() { selectedSite.toggleEditMode(true); };
+	  btnTwo.value = 'Delete';
+	  btnTwo.onclick = function() { selectedSite.confirmDeleteSite(); };
+	
+	  $('name' + id).innerHTML = textToHTML(site.name);
+	  $('address' + id).innerHTML = textToHTML(site.address);
+	  $('phone' + id).innerHTML = textToHTML(site.phone);
+	  $('description' + id).innerHTML = textToHTML(site.description);
+  } else {
+    $('name' + id).innerHTML = '<input type="text" style="width:100%" id="editName" value="' + site.name + '"/>';
+    $('address' + id).innerHTML = '<textarea style="width:100%" rows="3" id="editAddress">' + site.address + '</textarea>';
+    $('phone' + id).innerHTML = '<input type="text" style="width:100%" id="editPhone" value="' + site.phone + '"/>';
+    $('description' + id).innerHTML = '<textarea style="width:100%" rows="5" id="editDescription">' + site.description + '</textarea>';
+        
+    btnOne.value = 'Cancel';
+    btnOne.onclick = function() { selectedSite.toggleEditMode(false); };
+    btnTwo.value = 'Save';
+    btnTwo.onclick = function() { selectedSite.toggleEditMode(true); };
+  }
 }

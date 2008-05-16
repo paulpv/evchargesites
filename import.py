@@ -29,9 +29,7 @@ class ImportPage(webapp.RequestHandler):
     
 
 def main():
-  app = webapp.WSGIApplication([
-    ('/import[/]?', ImportPage),
-    ], debug=True)
+  app = webapp.WSGIApplication([('/import[/]?', ImportPage)], debug=True)
   util.run_wsgi_app(app)
 
 if __name__ == '__main__':
