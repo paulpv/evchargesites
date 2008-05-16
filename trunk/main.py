@@ -60,9 +60,7 @@ class MainPage(webapp.RequestHandler):
 
 
 def main():
-  app = webapp.WSGIApplication([
-    ('/', MainPage),
-    ], debug=DEBUG)
+  app = webapp.WSGIApplication([('/', MainPage)], debug=DEBUG)
   util.run_wsgi_app(app)
 
 if __name__ == '__main__':

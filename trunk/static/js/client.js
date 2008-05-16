@@ -23,44 +23,75 @@ InstallFunction(server, "POST", "delete_site", "DeleteSite");
 InstallFunction(server, "POST", "obliterate_site", "ObliterateSite");
 
 
-function InstallFunction(obj, http_method, name_remote, name_local) {
+function InstallFunction(obj, method, name_remote, name_local) {
 	if (!name_local)
-	 name_local = name_remote;
+	  name_local = name_remote;
+	
   obj[name_local] = function() {
-  	   var args = Array.prototype.slice.call(arguments);
-  	   CallRemote(http_method, name_remote, args);
+  	
+      // Find last one or two function arguments...
+      var callbacks = [];
+      var arg;
+
+      if (arguments.length >= 1){
+        if (arguments.length >= 2){
+          arg = arguments[arguments.length-2];
+          if ('function' == typeof arg){
+          	callbacks.push(arg);
+          } 
+        }
+      	arg = arguments[arguments.length-1]; 
+      	if ('function' == typeof arg){
+      		callbacks.push(arg);
+      	}
+      	arguments.length -= callbacks.length; 
+      }
+      
+      // Fill remaining callbacks with nulls
+      while (callbacks.length < 2){
+      	callbacks.push(null);
+      }
+      
+  	  var options = {
+  	    method:method,
+  	   	action:name_remote,
+  	   	parameters:arguments,
+  	   	onSuccess:callbacks[0],
+  	   	onFail:callbacks[1]
+  	  }
+  	  RPC(options);
   }
 }
 
 
-function CallRemote(http_method, function_name, opt_argv) {
-
-  var i;
+//
+//  options = {
+//    method: 'get'|'post',
+//    action: ..., // Some 'action' to request
+//    parameters: arguments,
+//    onSuccess: function(response) { ... },
+//    onFail: function(response) { ... },
+//    ...
+//  }
+//
+function RPC(options) {
   
-  if (!opt_argv)
-    opt_argv = new Array();
-  
-  // Find if the last arg is a callback function; save it
-  var callback = null;
-  var len = opt_argv.length;
-  if (len > 0 && typeof opt_argv[len-1] == 'function') {
-    callback = opt_argv[len-1];
-    opt_argv.length--;
-  }
-  var async = (callback != null);
+  var async = (options.onSuccess || options.onFail);
   
   var req = new XMLHttpRequest();
   var body = null;
   
-  switch (http_method.toUpperCase()){
+  switch (options.method.toUpperCase()){
     case 'GET':
     {
 		  // Encode the arguments in to a URI
-		  var query = '?action=' + encodeURIComponent(function_name);
-		  for (i = 0; i < opt_argv.length; i++) {
-		    var key = 'arg' + i;
-		    var val = JSON.stringify(opt_argv[i]);
-		    query += '&' + key + '=' + encodeURIComponent(val);
+		  var query = '?action=' + encodeURIComponent(options.action);
+		  if (options.parameters){
+			  for (var i = 0; i < options.parameters.length; i++) {
+			    var key = 'arg' + i;
+			    var val = JSON.stringify(options.parameters[i]);
+			    query += '&' + key + '=' + encodeURIComponent(val);
+			  }
 		  }
 		  query += '&time=' + new Date().getTime(); // IE cache workaround
 		  
@@ -70,9 +101,11 @@ function CallRemote(http_method, function_name, opt_argv) {
     case 'POST':
     {
 		  // Build an Array of parameters, w/ function_name being the first parameter
-		  var params = new Array(function_name);
-		  for (i = 0; i < opt_argv.length; i++) {
-		    params.push(opt_argv[i]);
+		  var params = new Array(options.action);
+		  if (options.parameters){
+			  for (var i = 0; i < options.parameters.length; i++) {
+			    params.push(options.parameters[i]);
+			  }
 		  }
 		  body = JSON.stringify(params);
 		  
@@ -84,21 +117,30 @@ function CallRemote(http_method, function_name, opt_argv) {
     }
     default:
     {
-      alert('Unsupported HTTP method: ' + http_method);
+      alert('Unsupported HTTP method: ' + options.method);
       return;
     }
   }
   
   if (async) {
     req.onreadystatechange = function() {
-      if(req.readyState == 4 && req.status == 200) {
-        var response = null;
-        try { 
-         response = JSON.parse(req.responseText);
-        } catch (e) {
-         response = req.responseText;
-        }
-        callback(response);
+    	
+      var response = null;
+      try { 
+       response = JSON.parse(req.responseText);
+      } catch (e) {
+       response = req.responseText;
+      }
+
+      if (4 == req.readyState){      
+	      if (200 == req.status && options.onSuccess){
+	        options.onSuccess(response);
+	      } else {
+//          if (DEBUG)
+//            alert('onFail:'+response);
+          if (options.onFail)
+            options.onFail(response);
+	      }
       }
     }
   }

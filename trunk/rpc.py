@@ -9,7 +9,7 @@ from datetime import datetime
 from django.utils import simplejson
 from google.appengine.api import users
 from google.appengine.ext import db
-import google.appengine.ext.db # TODO(pv): bug? get_sites gql won't work w/o
+import google.appengine.ext.db # TODO(pv): bug? get_sites gql won't work w/o (reported 2008/05/16)
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
@@ -19,6 +19,13 @@ class RPCHandler(webapp.RequestHandler):
   def __init__(self):
     webapp.RequestHandler.__init__(self)
     self._methods = RPCMethods(self)
+  
+  def handle_exception(self, exception, debug_mode):
+    if debug_mode:
+      webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+    else:
+      self.error(500)
+      self.response.out.write(exception)
   
   def _rpc(self, func_name, *args):
   
@@ -106,7 +113,7 @@ class Site(db.Model):
 # TODO(pv) batchAdd, batchDelete
 class RPCMethods:
   
-  class Error:
+  class Error(Exception):
     """Unspecified error in RPCMethods"""
   
   class AccessDenied(Error):
@@ -164,7 +171,7 @@ class RPCMethods:
 
   def get_url(self, url):
     if not self._is_admin():
-      raise AccessDenied
+      raise self.AccessDenied
     
     url = str(url)
     response = None
@@ -186,7 +193,7 @@ class RPCMethods:
     """
     user = users.get_current_user()
     if not user:
-      raise AccessDenied
+      raise self.AccessDenied
     
     # TODO(pv): RegEx this for \((.*?)\)
     latlng=latlng[1:-1].split(',')
@@ -204,7 +211,7 @@ class RPCMethods:
     """
     login:anonymous
     """
-    
+
     # limit output to only these values
     columns = ['id','name','latlng', 'userCreator', 'contactUser',]#types
     
@@ -226,7 +233,7 @@ class RPCMethods:
     """
     site = Site.get_by_id(id)
     if not site:
-      raise NotFound
+      raise self.NotFound
     
     site._dateAccessed = datetime.utcnow()
     site._userLastAccessed = users.get_current_user()
@@ -240,10 +247,10 @@ class RPCMethods:
     """
     site = Site.get_by_id(id)
     if not site:
-      raise NotFound
+      raise self.NotFound
     
     if not self._is_admin_or_creator(site):
-      raise AccessDenied
+      raise self.AccessDenied
     
     # limits setattr to only non-underscored properties
     for key in site.properties().iterkeys():
@@ -264,10 +271,10 @@ class RPCMethods:
     """
     site = Site.get_by_id(id)
     if not site:
-      raise NotFound
+      raise self.NotFound
     
     if not self._is_admin_or_creator(site):
-      raise AccessDenied
+      raise self.AccessDenied
     
     site._deleted = True
     site.put()
@@ -279,11 +286,11 @@ class RPCMethods:
     login:site creator or admin
     """
     if not self._is_admin():
-      raise AccessDenied
+      raise self.AccessDenied
     
     site = Site.get_by_id(id)
     if not site:
-      raise NotFound
+      raise self.NotFound
     
     site.delete()
     
@@ -311,9 +318,7 @@ class RPCMethods:
 """
 
 def main():
-  app = webapp.WSGIApplication([
-    ('/rpc', RPCHandler),
-    ], debug=True)
+  app = webapp.WSGIApplication([('/rpc', RPCHandler)], debug=True)
   util.run_wsgi_app(app)
 
 if __name__ == '__main__':
