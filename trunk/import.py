@@ -24,7 +24,7 @@ class ImportPage(webapp.RequestHandler):
       self.response.out.write(template.render(path, template_values))
     else:
       self.response.out.write('<p>'
-          'Sorry, this page is only accessible from Firefox 2.x and above.'
+          'Sorry, this page uses E4X and only supports Firefox >=2.x'
           '</p>')
     
 

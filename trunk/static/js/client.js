@@ -124,15 +124,15 @@ function RPC(options) {
   
   if (async) {
     req.onreadystatechange = function() {
-    	
-      var response = null;
-      try { 
-       response = JSON.parse(req.responseText);
-      } catch (e) {
-       response = req.responseText;
-      }
-
       if (4 == req.readyState){      
+
+	      var response = null;
+	      try { 
+	       response = JSON.parse(req.responseText);
+	      } catch (e) {
+	       response = req.responseText;
+	      }
+
 	      if (200 == req.status && options.onSuccess){
 	        options.onSuccess(response);
 	      } else {

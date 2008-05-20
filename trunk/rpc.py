@@ -7,9 +7,8 @@ import logging
 
 from datetime import datetime
 from django.utils import simplejson
-from google.appengine.api import users
 from google.appengine.ext import db
-import google.appengine.ext.db # TODO(pv): bug? get_sites gql won't work w/o (reported 2008/05/16)
+from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
@@ -28,6 +27,8 @@ class RPCHandler(webapp.RequestHandler):
       self.response.out.write(exception)
   
   def _rpc(self, func_name, *args):
+  
+    logging.info('RPC: "%s", %r' % (func_name, repr(args)))
   
     if not func_name or func_name[0] == '_':
       self.error(403) # access denied
@@ -131,9 +132,14 @@ class RPCMethods:
   
   def _is_creator(self, site, user=users.get_current_user()):
     return user and site.userCreator == user
+
+  def _is_contact(self, site, user=users.get_current_user()):
+    return user and site.contactUser == user
   
-  def _is_admin_or_creator(self, site, user=users.get_current_user()):
-    return self._is_admin() or self._is_creator(site, user)
+  def _is_creator_admin_or_contact(self, site, user=users.get_current_user()):
+    return (self._is_creator(site, user) or 
+      self._is_admin() or
+      self._is_contact(site, user)) 
   
   def _get_site_id_and_values(self, site, keys=None):
     if not keys:
@@ -168,8 +174,18 @@ class RPCMethods:
       properties[key] = value
     
     return properties
+  
+  def _to_latlng(self, val):
+    latlng = val
+    # TODO(pv): RegEx this for \((.*?)\)
+    latlng=latlng[1:-1].split(',')
+    latlng = db.GeoPt(float(latlng[0]),float(latlng[1]))
+    return latlng
 
   def get_url(self, url):
+    """
+    requires:user == admin
+    """
     if not self._is_admin():
       raise self.AccessDenied
     
@@ -189,18 +205,15 @@ class RPCMethods:
 
   def add_site(self, name, latlng, *args, **kwds):
     """
-    login: user
+    requires:user
     """
     user = users.get_current_user()
     if not user:
       raise self.AccessDenied
     
-    # TODO(pv): RegEx this for \((.*?)\)
-    latlng=latlng[1:-1].split(',')
-    
     site = Site(
       name=name,
-      latlng=db.GeoPt(float(latlng[0]),float(latlng[1])),
+      latlng=self._to_latlng(latlng),
       userCreator=user,
       )
     site.put()
@@ -209,11 +222,11 @@ class RPCMethods:
     
   def get_sites(self):
     """
-    login:anonymous
+    requires:anonymous or user
     """
 
     # limit output to only these values
-    columns = ['id','name','latlng', 'userCreator', 'contactUser',]#types
+    columns = ['id','name','latlng','userCreator','contactUser',]#types
     
     sites = Site.gql('WHERE _deleted = FALSE ORDER BY _dateCreated')
     
@@ -225,11 +238,12 @@ class RPCMethods:
     return dict(
       columns=columns,
       rows=rows,
+      count=len(rows),
       )
 
   def get_site(self, id):
     """
-    login:anonmymous
+    requires:anonmymous or user
     """
     site = Site.get_by_id(id)
     if not site:
@@ -243,13 +257,13 @@ class RPCMethods:
 
   def update_site(self, id, props):
     """
-    login:site creator or admin
+    requires:user == creator, admin, or contact
     """
     site = Site.get_by_id(id)
     if not site:
       raise self.NotFound
     
-    if not self._is_admin_or_creator(site):
+    if not self._is_creator_admin_or_contact(site):
       raise self.AccessDenied
     
     # limits setattr to only non-underscored properties
@@ -258,8 +272,7 @@ class RPCMethods:
         value = props[key]
         prop = getattr(site, key)
         if isinstance(prop, db.GeoPt):
-          latlng=value[1:-1].split(',')
-          value=db.GeoPt(float(latlng[0]),float(latlng[1]))
+          value=self._to_latlng(value)
         setattr(site, key, value)
     site.put()
     
@@ -267,13 +280,13 @@ class RPCMethods:
   
   def delete_site(self, id):
     """
-    login:site creator or admin
+    requires:user == creator, admin, or contact
     """
     site = Site.get_by_id(id)
     if not site:
       raise self.NotFound
     
-    if not self._is_admin_or_creator(site):
+    if not self._is_creator_admin_or_contact(site):
       raise self.AccessDenied
     
     site._deleted = True
@@ -283,7 +296,7 @@ class RPCMethods:
   
   def obliterate_site(self, id):
     """
-    login:site creator or admin
+    requires:user == admin
     """
     if not self._is_admin():
       raise self.AccessDenied

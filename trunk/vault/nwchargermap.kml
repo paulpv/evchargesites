@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1">
+<Document>
+  <name>NW EV Charging Locations</name>
+  <description><![CDATA[places where you can charge your vehicle]]></description>
+  <Style id="style14">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style18">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style9">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style5">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style27">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style19">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style32">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style11">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style20">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style7">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style13">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style10">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style22">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style29">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style24">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style28">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style4">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style25">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style6">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style30">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style21">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style31">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style1">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style16">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style12">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style2">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style3">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style8">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style15">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style23">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style17">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="style26">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.google.com/mapfiles/ms/micons/blue-dot.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Placemark>
+    <name>Anderson&#39;s General Store</name>
+    <description><![CDATA[<SPAN>7885 Guemes Island Rd</SPAN><BR><SPAN>Anacortes</SPAN>, <SPAN>WA</SPAN> <SPAN>98221</SPAN><BR>(360) 293-4548<BR><A href="http://maps.google.com/maps?f=l&amp;hl=en&amp;geocode=&amp;q=Anderson"><IMG src="http://base.googlehosted.com/base_media?q=maps:www.guemesislandstore.com/art/mstlft2.gif&amp;size=2&amp;hl=en"></A><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=l&amp;hl=en&amp;geocode=&amp;q=Anderson">more info »</A></SPAN>]]></description>
+    <styleUrl>#style14</styleUrl>
+    <Point>
+      <coordinates>-122.624695,48.530300,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Benaroya Hall</name>
+    <description><![CDATA[Ask for building engineer, the current only comes in at 5 amps. Parking spaces # B12, B177 and B206 have 110 volt, 15 Amp outlets near them. All on lower (B) parking level. Parking costs $2.00 per 2 hours. Also on A level next to the west elevator. 
+]]></description>
+    <styleUrl>#style18</styleUrl>
+    <Point>
+      <coordinates>-122.336914,47.607964,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Steve Bernheim (Home)</name>
+    <description><![CDATA[425-670-9973]]></description>
+    <styleUrl>#style9</styleUrl>
+    <Point>
+      <coordinates>-122.377243,47.812225,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Steve Bernheim (work)</name>
+    <description><![CDATA[425-712-8318]]></description>
+    <styleUrl>#style5</styleUrl>
+    <Point>
+      <coordinates>-122.375679,47.811108,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Tracy Carroll</name>
+    <description><![CDATA[206-391-6744]]></description>
+    <styleUrl>#style27</styleUrl>
+    <Point>
+      <coordinates>-122.381279,47.682178,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Costco</name>
+    <description><![CDATA[<DIV><SPAN>1801 10th Ave NW</SPAN><BR><SPAN>Issaquah</SPAN>, <SPAN>WA</SPAN> <SPAN>98027</SPAN><BR>(425) 313-0965<BR><BR><SPAN name="attr">Small Paddle Inductive (SPI) charger <BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Costco,+Issaquah&amp;jsv=107&amp;sll=47.438306,-122.232513&amp;sspn=0.611198,1.71936&amp;ie=UTF8&amp;latlng=47550836,-122049876,7143216433493361582&amp;ei=htUISLGaI4qwjgHZmdT0Bw&amp;sig2=EavPIzjkul-E0yApBPegag&amp;cd=2">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style19</styleUrl>
+    <Point>
+      <coordinates>-122.049873,47.550835,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>County of King: Superior Court Judges</name>
+    <description><![CDATA[<DIV><SPAN>401 4th Ave N</SPAN><BR><SPAN>Kent</SPAN>, <SPAN>WA</SPAN> <SPAN>98032</SPAN><BR>(206) 296-9238<BR>There are 110-volt plugs near the motorcycle parking area of the King County Courthouse in Kent at the south end of the parking garage on levels one and two<BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=King+county+Courthouse,+Kent,+WA&amp;jsv=107&amp;sll=47.603559,-122.329416&amp;sspn=0.03808,0.10746&amp;ie=UTF8&amp;latlng=47384125,-122237395,1716611430354581805&amp;ei=QdUISIflKJbYigG0w6ydCA&amp;sig2=KfC4XYVM0LfcXfa8PPnFcw&amp;cd=2">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style32</styleUrl>
+    <Point>
+      <coordinates>-122.237396,47.384125,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Crowne Plaza Seattle</name>
+    <description><![CDATA[<DIV><SPAN>1113 6th Avenue</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98101</SPAN><BR>(206) 464-1980<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Crowne+Hotel+Plaza,+seattle&amp;jsv=107&amp;sll=49.088258,-122.530518&amp;sspn=4.734688,13.754883&amp;ie=UTF8&amp;latlng=47608267,-122332248,12816771969676705082&amp;ei=M9MISJuIDo6yjgGw8K2aCA&amp;sig2=mv-dF24P5gCXZ8FvO-NCCg&amp;cd=1&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=LBC-6361776-3601670200&amp;size=2&amp;hl=en"></A><BR><BR>Call ahead and building management will set up an extension cord<SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Crowne+Hotel+Plaza,+seattle&amp;jsv=107&amp;sll=49.088258,-122.530518&amp;sspn=4.734688,13.754883&amp;ie=UTF8&amp;latlng=47608267,-122332248,12816771969676705082&amp;ei=M9MISJuIDo6yjgGw8K2aCA&amp;sig2=mv-dF24P5gCXZ8FvO-NCCg&amp;cd=1">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style11</styleUrl>
+    <Point>
+      <coordinates>-122.332245,47.608269,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Eastgate Park-and-Ride Garage</name>
+    <description><![CDATA[<DIV><SPAN>14200 SE Eastgate Way</SPAN><BR><SPAN>Bellevue</SPAN>, <SPAN>WA</SPAN> <SPAN>98007</SPAN><BR>(206) 553-3000<BR><SPAN name="attr">3 Charging Stations; Exact location unknown - need photo<BR><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Eastgate+park+and+Ride,+bellevue+wa&amp;jsv=107&amp;sll=47.698166,-122.279592&amp;sspn=0.009503,0.026865&amp;ie=UTF8&amp;latlng=47580043,-122153369,1506639608635190545&amp;ei=4WEHSIymF4ScjQPe7sSTCA&amp;sig2=ZZ7MFQ6S_PCuHklqLqvdwQ&amp;cd=1">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style20</styleUrl>
+    <Point>
+      <coordinates>-122.153366,47.580044,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Electric Vehicles Northwest</name>
+    <description><![CDATA[<SPAN>110 N 36th St</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98103</SPAN><BR>(206) 547-4621<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=ebikesnw,+seattle,+wa&amp;jsv=107&amp;sll=47.59042,-122.106342&amp;sspn=0.076179,0.21492&amp;ie=UTF8&amp;latlng=47652958,-122357535,15992063567347818663&amp;ei=YGIHSMvFG5qEjQOX1qj0Bw&amp;sig2=chU5Xn-mdv6OFNx-2Wz5MA&amp;cd=1&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=maps:businessphotosusa.com/googletn/showthumbnail.aspx%3F_iusa%3D905072211&amp;size=2&amp;hl=en"></A><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=ebikesnw,+seattle,+wa&amp;jsv=107&amp;sll=47.59042,-122.106342&amp;sspn=0.076179,0.21492&amp;ie=UTF8&amp;latlng=47652958,-122357535,15992063567347818663&amp;ei=YGIHSMvFG5qEjQOX1qj0Bw&amp;sig2=chU5Xn-mdv6OFNx-2Wz5MA&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style7</styleUrl>
+    <Point>
+      <coordinates>-122.357536,47.652958,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Google Seattle/Kirkland Engineering Office</name>
+    <description><![CDATA[<DIV>720 4th Ave, Kirkland, WA 98033</DIV>
+<DIV>Google employees only<BR>Under construction<BR>Contact: Paul Peavyhouse 425-891-4796<BR>&nbsp;</DIV>]]></description>
+    <styleUrl>#style13</styleUrl>
+    <Point>
+      <coordinates>-122.195801,47.678600,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>United States Government: Jackson Federal Building</name>
+    <description><![CDATA[<SPAN>915</SPAN> <SPAN>2nd Ave # 3140</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98174</SPAN><BR>(206) 220-7640<BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Henry+M.+Jackson+Federal+Building,+Seattle,+WA&amp;jsv=107&amp;sll=47.679432,-122.195799&amp;sspn=0.009506,0.026865&amp;ie=UTF8&amp;latlng=47604538,-122334591,1010657261204878063&amp;ei=vmIHSLySL5qEjQOX1qj0Bw&amp;sig2=rUe4L2N6RYqehoA-pFJAdQ&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style10</styleUrl>
+    <Point>
+      <coordinates>-122.334595,47.604538,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Inter Island Medical Center</name>
+    <description><![CDATA[<SPAN>550 Spring St</SPAN><BR><SPAN>Friday Harbor</SPAN>, <SPAN>WA</SPAN> <SPAN>98250</SPAN><BR>(360) 378-2141<BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=The+sustainable+technology+center,+friday+harbor,+wa&amp;jsv=107&amp;sll=47.812874,-122.373201&amp;sspn=0.004741,0.013433&amp;ie=UTF8&amp;latlng=48532027,-123020682,14462458434271433693&amp;ei=8mUHSOPyGYScjQOa7viSCA&amp;sig2=oiKDDRXulPUMoydG0p0NMA&amp;cd=4">more info »</A></SPAN>]]></description>
+    <styleUrl>#style22</styleUrl>
+    <Point>
+      <coordinates>-123.020683,48.532028,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Issaquah Park &amp; Ride - MS - 220th Ave SE &amp; SE 51st St</name>
+    <description><![CDATA[<SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Issaquah+Park+and+Ride,+Issaquah,+WA&amp;jsv=107&amp;sll=47.672786,-122.330017&amp;sspn=0.608469,1.71936&amp;ie=UTF8&amp;latlng=47555677,-122048555,4271856173224223792&amp;ei=5WIHSLnbCp-ejQPL9M2ZCA&amp;sig2=NE_uXEajJb6EriRsd1r9Sg&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style29</styleUrl>
+    <Point>
+      <coordinates>-122.048553,47.555676,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Bryan Lowe</name>
+    <description><![CDATA[206-619-2995]]></description>
+    <styleUrl>#style24</styleUrl>
+    <Point>
+      <coordinates>-122.287918,47.696590,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Manzanita Micro Power Shop</name>
+    <description><![CDATA[Rich will be happy to give you lots of power.
+<br>
+<br>Call ahead to be sure there's somebody there.
+<br>
+<br>(360) 297-1660 
+<br>]]></description>
+    <styleUrl>#style28</styleUrl>
+    <Point>
+      <coordinates>-122.572937,47.803417,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>MC Electric Vehicles</name>
+    <description><![CDATA[<span>1200 S Dearborn St</span><br><span>Seattle</span>, <span>WA</span> <span>98144</span><br>(206) 328-1750<br><a href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=MC+Electric+Vehicles,+Seattle&amp;jsv=107&amp;sll=47.582547,-122.034073&amp;sspn=0.30476,0.85968&amp;ie=UTF8&amp;latlng=47595845,-122317246,4922106054468699736&amp;ei=GWMHSKCRA43GigP6642iCA&amp;sig2=FA5Eke24k2_ASm77JxhblA&amp;cd=1&amp;dtab=5"><img src="http://base.googlehosted.com/base_media?q=maps:businessphotosusa.com/googletn/showthumbnail.aspx%3F_iusa%3D611674540&amp;size=2&amp;hl=en"></a><span name="attr"><br><a href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=MC+Electric+Vehicles,+Seattle&amp;jsv=107&amp;sll=47.582547,-122.034073&amp;sspn=0.30476,0.85968&amp;ie=UTF8&amp;latlng=47595845,-122317246,4922106054468699736&amp;ei=GWMHSKCRA43GigP6642iCA&amp;sig2=FA5Eke24k2_ASm77JxhblA&amp;cd=1">more info »</a></span>]]></description>
+    <styleUrl>#style4</styleUrl>
+    <Point>
+      <coordinates>-122.317245,47.595844,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Metro Transit Atlantic/Central Base</name>
+    <description><![CDATA[Metro Transit employees only.
+<br>"On the west side of Sixth Avenue South between Royal Brougham Way South and South Atlantic Street"]]></description>
+    <styleUrl>#style25</styleUrl>
+    <Point>
+      <coordinates>-122.326088,47.591232,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Jake Oshins</name>
+    <description><![CDATA[4320 Sunnyside Ave. N.
+<br>206-329-8037
+<br>
+<br>240V 60A service in the driveway.
+<br>
+<br>Knock on door for a variety of outlets.]]></description>
+    <styleUrl>#style6</styleUrl>
+    <Point>
+      <coordinates>-122.329887,47.659664,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Victor Munoz</name>
+    <description><![CDATA[206-632-2994]]></description>
+    <styleUrl>#style30</styleUrl>
+    <Point>
+      <coordinates>-122.335190,47.657249,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Pacific Power Batteries</name>
+    <description><![CDATA[<SPAN>3729 Broadway</SPAN><BR><SPAN>Everett</SPAN>, <SPAN>WA</SPAN> <SPAN>98201</SPAN><BR>(425) 259-9260<BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Pacific+Power+Batteries,+Everett,+WA&amp;jsv=107&amp;sll=48.536979,-123.016255&amp;sspn=0.002337,0.006716&amp;ie=UTF8&amp;latlng=47968384,-122201092,13666014140020904472&amp;ei=ldQISM3GE4qwjgGlmpD1Bw&amp;sig2=ZtpXh9Lg21Nab_QZ_39LJA&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style21</styleUrl>
+    <Point>
+      <coordinates>-122.201096,47.968384,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Paul Peavyhouse</name>
+    <description><![CDATA[425-891-4796<br>Under Construction EV's RULE!]]></description>
+    <styleUrl>#style31</styleUrl>
+    <Point>
+      <coordinates>-122.221657,47.732296,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Pyramid Alehouse</name>
+    <description><![CDATA[<DIV><SPAN>1201 1st Ave S</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98134</SPAN><BR>(206) 682-3377<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Pyramid+Alehouse,+seattle,+wa&amp;jsv=107&amp;sll=47.719001,-122.305298&amp;sspn=1.215864,3.438721&amp;ie=UTF8&amp;latlng=47592363,-122334233,18181410566871311696&amp;ei=ENUISKO0D46yjgHy8OGaCA&amp;sig2=mVqfE4MB9UVO2s8uHNyCAw&amp;cd=1&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=maps:www.junglecity.com/images/enjoy/restaurant/pyramidbreweries2.jpg&amp;size=2&amp;hl=en"></A><BR>Call ahead and they will save a spot out front that can be reached with an extension cord<SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Pyramid+Alehouse,+seattle,+wa&amp;jsv=107&amp;sll=47.719001,-122.305298&amp;sspn=1.215864,3.438721&amp;ie=UTF8&amp;latlng=47592363,-122334233,18181410566871311696&amp;ei=ENUISKO0D46yjgHy8OGaCA&amp;sig2=mVqfE4MB9UVO2s8uHNyCAw&amp;cd=1">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style1</styleUrl>
+    <Point>
+      <coordinates>-122.334236,47.592361,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>World Trade Center One World</name>
+    <description><![CDATA[<SPAN>121</SPAN> <SPAN>SW Salmon St # 250</SPAN><BR><SPAN>Portland</SPAN>, <SPAN>OR</SPAN> <SPAN>97204</SPAN><BR>(503) 464-8888<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Portland+World+Trade+Center,+Portland,+Or&amp;jsv=107&amp;sll=47.733132,-122.215927&amp;sspn=0.009496,0.026865&amp;ie=UTF8&amp;latlng=45515815,-122674891,8902915458158153830&amp;ei=sWQHSP_nPJqEjQPN1sD0Bw&amp;sig2=-jGqn-sCGT4Qc6X_1hLBLA&amp;cd=1&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=maps:businessphotosusa.com/googletn/showthumbnail.aspx%3F_iusa%3D368109302&amp;size=2&amp;hl=en"></A><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Portland+World+Trade+Center,+Portland,+Or&amp;jsv=107&amp;sll=47.733132,-122.215927&amp;sspn=0.009496,0.026865&amp;ie=UTF8&amp;latlng=45515815,-122674891,8902915458158153830&amp;ei=sWQHSP_nPJqEjQPN1sD0Bw&amp;sig2=-jGqn-sCGT4Qc6X_1hLBLA&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style16</styleUrl>
+    <Point>
+      <coordinates>-122.674889,45.515816,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Rexville Grocery</name>
+    <description><![CDATA[<span>19271 Best Rd</span><br><span>Mt Vernon</span>, <span>WA</span> <span>98273</span><br>(360) 466-5522<br><a href="/maps?f=q&amp;hl=en&amp;geocode=&amp;q=rexville+market&amp;jsv=107&amp;sll=47.026294,-121.676466&amp;sspn=3.16047,10.283203&amp;ie=UTF8&amp;latlng=48365527,-122429125,17366447655034279209&amp;ei=pHwLSKnoDJWmigO0sIWXCA&amp;sig2=HlXkmGEt7clE8mWuGxfv_Q&amp;cd=1&amp;dtab=5"><img src="http://base.googlehosted.com/base_media?q=maps:www.rexvillegrocery.com/images/picniclake.jpg&amp;size=2&amp;hl=en"></a><span name="attr"><br><a href="/maps?f=q&amp;hl=en&amp;geocode=&amp;q=rexville+market&amp;jsv=107&amp;sll=47.026294,-121.676466&amp;sspn=3.16047,10.283203&amp;ie=UTF8&amp;latlng=48365527,-122429125,17366447655034279209&amp;ei=pHwLSKnoDJWmigO0sIWXCA&amp;sig2=HlXkmGEt7clE8mWuGxfv_Q&amp;cd=1">more info »</a></span>]]></description>
+    <styleUrl>#style12</styleUrl>
+    <Point>
+      <coordinates>-122.429123,48.365528,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>San Juan Island Yacht Club</name>
+    <description><![CDATA[<DIV><SPAN>273 Front St</SPAN><BR><SPAN>Friday Harbor</SPAN>, <SPAN>WA</SPAN> <SPAN>98250</SPAN><BR>(360) 378-3434<BR><BR>The Port of Friday Harbor has two official electric vehicle charging spaces at the top of the steps to the upper parking lot right next to the Friday Harbor Yacht Club<BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Friday+Harbor+Yatch+club&amp;jsv=107&amp;sll=47.430671,-120.332308&amp;sspn=0.009551,0.026865&amp;ie=UTF8&amp;latlng=48536772,-123017579,2156598183997754278&amp;ei=89MISKbzDI6yjgHy8OGaCA&amp;sig2=zrXBjpq8H6j357Q2uWym7A&amp;cd=1">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style2</styleUrl>
+    <Point>
+      <coordinates>-123.017578,48.536774,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Seattle City Hall</name>
+    <description><![CDATA[<DIV><SPAN>600 4th Ave</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98104</SPAN><BR>(206) 398-5500<BR><SPAN name="attr"><BR>Underground Parking Garage. Entrance is on the North side of James Street between 4th and 5th Avenue, closer to 5th Ave. Garage is only open Monday thru Friday,&nbsp;? hours&nbsp;? They have an outside sign indicating an Electric Vehicle Charging Station. <A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Seattle+City+Hall,+Seattle,+WA&amp;jsv=107&amp;sll=45.526675,-122.604847&amp;sspn=0.079132,0.21492&amp;ie=UTF8&amp;latlng=47603265,-122330275,14043672985253942744&amp;ei=0WQHSPvuC4K4igOY-LyfCA&amp;sig2=okBJlRfA-L-XmDwbTYSekQ&amp;cd=1">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style3</styleUrl>
+    <Point>
+      <coordinates>-122.330276,47.603264,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Seattle Public Library</name>
+    <description><![CDATA[<DIV><SPAN>1000 4th Ave</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98104</SPAN><BR>(206) 386-4636<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Seattle+Public+Library,+Seattle,+WA&amp;jsv=107&amp;sll=47.60434,-122.330317&amp;sspn=0.00952,0.026865&amp;ie=UTF8&amp;latlng=47606105,-122332857,12203302840481987599&amp;ei=E2UHSN36NIScjQPe7sSTCA&amp;sig2=uv7JfV6lz11vIL0BdNcL8A&amp;cd=1&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=maps:11870.com/multimedia/imagenes/pxl_316ae5e66e0353880db07019ed5acc5f.jpeg&amp;size=2&amp;hl=en"></A></DIV>
+<DIV>
+<UL>
+<LI>Hours: Mon - Thurs 10 am - 8 pm 
+<LI>Fri, Sat - 10 am - 6 pm 
+<LI>Sun: 12 pm - 6 pm 
+<LI>There are two electrical automobile charge stations in the garage each with 240 volt 32 amp outlets and an Avcon connector. No 110 volt outlets. Charging station is in South East corner of garage. 
+<LI>Rates are: 0 to 20 minutes - Free 
+<LI>20 to 40 minutes - $3.00 
+<LI>40 minutes to 1 hour - $5.00 
+<LI>1 to 2 hours - $7.00 
+<LI>2 to 3 hours - $10.00 
+<LI>3 to 4 hours - $14.00 
+<LI>4 to 5 hours - $18.00 
+<LI>5 to 24 hours - $24.00 
+<LI>Also along the elevator shaft opposite the money window. <BR><SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Seattle+Public+Library,+Seattle,+WA&amp;jsv=107&amp;sll=47.60434,-122.330317&amp;sspn=0.00952,0.026865&amp;ie=UTF8&amp;latlng=47606105,-122332857,12203302840481987599&amp;ei=E2UHSN36NIScjQPe7sSTCA&amp;sig2=uv7JfV6lz11vIL0BdNcL8A&amp;cd=1">more info »</A></SPAN></LI></LI></UL></DIV>]]></description>
+    <styleUrl>#style8</styleUrl>
+    <Point>
+      <coordinates>-122.332855,47.606106,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Silver Cloud</name>
+    <description><![CDATA[<DIV><SPAN>1100 Broadway</SPAN><BR><SPAN>Seattle</SPAN>, <SPAN>WA</SPAN> <SPAN>98122</SPAN><BR>(206) 325-1400<BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Silver+Cloud+Inn,+1100+Broadway+Seattle,+WA+98122&amp;jsv=107&amp;sll=47.970043,-122.201185&amp;sspn=0.018906,0.05373&amp;ie=UTF8&amp;latlng=47611167,-122320776,16639475113846303413&amp;ei=ztQISKO7O5HYigG3oLSgCA&amp;sig2=OBPpyw8abFsGQGJW0Atzhw&amp;cd=2&amp;dtab=5"><IMG src="http://base.googlehosted.com/base_media?q=maps:images.travelnow.com/hotels/SEA_SCHB-exter-1.jpg&amp;size=2&amp;hl=en"></A><BR>Call ahead and they will give you an "OK" to park near the door on the first floor of the parking garage next to a plug. <SPAN name="attr"><BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Silver+Cloud+Inn,+1100+Broadway+Seattle,+WA+98122&amp;jsv=107&amp;sll=47.970043,-122.201185&amp;sspn=0.018906,0.05373&amp;ie=UTF8&amp;latlng=47611167,-122320776,16639475113846303413&amp;ei=ztQISKO7O5HYigG3oLSgCA&amp;sig2=OBPpyw8abFsGQGJW0Atzhw&amp;cd=2">more info »</A></SPAN></DIV>]]></description>
+    <styleUrl>#style15</styleUrl>
+    <Point>
+      <coordinates>-122.320778,47.611168,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Jeff &amp; Sandy Smith</name>
+    <description><![CDATA[We have a 120v 15amp outlet available in driveway under kitchen window. "Plug in vehicle parking only sign" on house next to driveway.<br>12814 NE 199th St<br>Bothell, WA 98011<br>425-466-0349<br>425-417-2993]]></description>
+    <styleUrl>#style23</styleUrl>
+    <Point>
+      <coordinates>-122.169945,47.772171,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>Wenatchee Valley College</name>
+    <description><![CDATA[<SPAN>1300 5th St</SPAN><BR><SPAN>Wenatchee</SPAN>, <SPAN>WA</SPAN> <SPAN>98801</SPAN><BR>(509) 682-6800<BR><SPAN name="attr">the community college has a couple of dedicated charging spots at their auto shop. WVC is also installing charging stations in their new parking lot in front of the new Allied Health building <BR><A href="http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Wenatchee+Valley+college&amp;jsv=107&amp;sll=47.6091,-122.329438&amp;sspn=0.009519,0.026865&amp;ie=UTF8&amp;latlng=47429825,-120332251,10086220346088114087&amp;ei=jtMISLjRKoqwjgHamrj1Bw&amp;sig2=VbuV0_spI5PJrtgcUTk2tw&amp;cd=1">more info »</A></SPAN>]]></description>
+    <styleUrl>#style17</styleUrl>
+    <Point>
+      <coordinates>-120.332253,47.429825,0.000000</coordinates>
+    </Point>
+  </Placemark>
+  <Placemark>
+    <name>David White</name>
+    <description><![CDATA[<DIV>5003 48th Ave SW</DIV>
+<DIV>Seattle, WA 98136</DIV>
+<DIV><A href="http://www.evcharging.org/">NW Evcharging.org</A></DIV>
+<DIV><A href="http://www.automobileman.com">http://www.automobileman.com</A></DIV>
+<DIV><BR>&nbsp;</DIV>
+<DIV>Both 110 and 240 volts, in the alley behind the house.&nbsp; Call ahead (206) 999-8138<BR>&nbsp;</DIV>]]></description>
+    <styleUrl>#style26</styleUrl>
+    <Point>
+      <coordinates>-122.393616,47.557533,0.000000</coordinates>
+    </Point>
+  </Placemark>
+</Document>
+</kml>

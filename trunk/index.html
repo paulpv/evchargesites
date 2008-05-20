@@ -173,6 +173,7 @@ function onLoad(){
   */
 
   createZoomControl();
+  createSvPano();  
 
   svClient = new GStreetviewClient();
   toggleSvOverlay();
@@ -199,7 +200,7 @@ function onLoad(){
     icon: carIcon,
     draggable: true
   });
-  GEvent.addListener(svMarker, "dragend", onDragEnd);
+  GEvent.addListener(svMarker, "dragend", onSvDragEnd);
   //GEvent.addListener(svMarker, "dblclick", function() { map.setCenter(svMarker.getLatLng(), 10); });
   GEvent.addListener(svMarker, "click", onSvClick);
   map.addOverlay(svMarker);
@@ -285,17 +286,63 @@ function createZoomControl() {
 // StreetView Functions...
 // TODO(pv): Make all of the below code a self-contained object
 //
-function toggleSvOverlay(){
-  if (!svOverlay) {
-    svOverlay = new GStreetviewOverlay();
-    map.addOverlay(svOverlay);
-  } else {
-    map.removeOverlay(svOverlay);
-    svOverlay = null;
-  }
+function createSvPano(){
+
+  // Use traditional HD ratio of 16:9
+  var pano = document.createElement('div');
+  pano.id = 'pano';
+  pano.style.textAlign = 'center';
+  pano.style.width = '640px';
+  pano.style.height = '360px';
+  pano.innerHTML = 'Loading panorama';
+  
+  document.body.appendChild(pano);
+  
+  svPanorama = new GStreetviewPanorama($('pano'));
 }
 
-function onDragEnd(){
+// Consolidate w/ SV code in ChargeSite
+function openPanoramaBubble(){
+
+  lastSvMarkerLocation = svMarker.getLatLng();
+  
+  if ($('pano') == null){
+    createSvPano();
+  }
+
+  var contentMax = $('pano').cloneNode(1);
+  contentMax.style.width = '960px';
+  contentMax.style.height = '540px';
+  
+  // TODO(pv): is there a maxWidth cap (700?); find a way to increase
+  var infoOpts = {
+    //maxWidth: 1920,
+    maxContent: contentMax,
+    maxTitle: "Full screen"
+  };
+  
+  svMarker.openInfoWindow($('pano'), infoOpts);
+  
+  var pov = {
+    yaw: appOpts.svYaw,
+    pitch: appOpts.svPitch,
+    zoom: appOpts.svZoom
+  };
+  svPanorama.setLocationAndPOV(svMarker.getLatLng(), pov);
+  
+  GEvent.addListener(svPanorama, "initialized", onNewLocation);
+  GEvent.addListener(svPanorama, "yawchanged", onYawChange);
+  GEvent.addListener(svPanorama, "pitchchanged", onPitchChange);
+  GEvent.addListener(svPanorama, "zoomchanged", onZoomChange);
+  
+  var iw = map.getInfoWindow();
+  GEvent.addListener(iw, "maximizeend", function(){
+    svPanorama.setContainer(contentMax);
+    window.setTimeout("svPanorama.checkResize()", 0);
+  });
+}
+
+function onSvDragEnd(){
   if (svPanorama) {
     var latlng = svMarker.getLatLng();
     svClient.getNearestPanorama(latlng, function(response){
@@ -313,56 +360,16 @@ function onDragEnd(){
 
 function onSvClick(){
 
-	var latlng = svMarker.getLatLng();
-	svClient.getNearestPanorama(latlng, function(response){
-	  if (response.code != 200) {
-	    alert('No StreetView is available at this location...yet!');
-	  } else {	  
-	    var latlng = new GLatLng(response.Location.lat, response.Location.lng);
-	    svMarker.setLatLng(latlng);
+  var latlng = svMarker.getLatLng();
+  svClient.getNearestPanorama(latlng, function(response){
+    if (response.code != 200) {
+      alert('No StreetView is available at this location...yet!');
+    } else {    
+      var latlng = new GLatLng(response.Location.lat, response.Location.lng);
+      svMarker.setLatLng(latlng);
       openPanoramaBubble();
      }
    });
-}
-
-// Consolidate w/ SV code in ChargeSite
-function openPanoramaBubble(){
-
-  lastSvMarkerLocation = svMarker.getLatLng();
-
-  // TODO(pv): maxWidth seems to be capped ~700; find a way to increase
-  var contentNode = document.createElement('div');
-  contentNode.style.textAlign = 'center';
-  contentNode.style.width = '960px';
-  contentNode.style.height = '540px';
-  contentNode.innerHTML = 'Loading panorama';
-  
-  var infoOpts = {
-    maxWidth: 1000,
-    maxContent: contentNode,
-    maxTitle: "Full screen"
-  };
-  
-  svMarker.openInfoWindow("<div id='pano' style='width:640px;height:360px;'></div>");//, infoOpts);
-  svPanorama = new GStreetviewPanorama($('pano'));
-  
-  var pov = {
-    yaw: appOpts.svYaw,
-    pitch: appOpts.svPitch,
-    zoom: appOpts.svZoom
-  };
-  svPanorama.setLocationAndPOV(svMarker.getLatLng(), pov);
-  
-  GEvent.addListener(svPanorama, "initialized", onNewLocation);
-  GEvent.addListener(svPanorama, "yawchanged", onYawChange);
-  GEvent.addListener(svPanorama, "pitchchanged", onPitchChange);
-  GEvent.addListener(svPanorama, "zoomchanged", onZoomChange);
-  
-  var iw = map.getInfoWindow();
-  GEvent.addListener(iw, "maximizeend", function(){
-    svPanorama.setContainer(contentNode);
-    window.setTimeout("svPanorama.checkResize()", 5);
-  });
 }
 
 function onNewLocation(location){
@@ -394,6 +401,17 @@ function drawSvMarkerAngle(){
   var guyImageNum = Math.round(appOpts.svYaw / GUY_ANGULAR_RES) % GUY_NUM_ICONS;
   var guyImageUrl = "http://maps.google.com/intl/en_us/mapfiles/cb/man_arrow-" + guyImageNum + ".png";
   svMarker.setImage(guyImageUrl);
+}
+
+// Turns on/off the highlighting of StreetView enabled streets
+function toggleSvOverlay(){
+  if (!svOverlay) {
+    svOverlay = new GStreetviewOverlay();
+    map.addOverlay(svOverlay);
+  } else {
+    map.removeOverlay(svOverlay);
+    svOverlay = null;
+  }
 }
 
 //]]></script>
