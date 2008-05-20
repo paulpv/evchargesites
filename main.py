@@ -3,7 +3,6 @@
 __author__ = 'Paul Peavyhouse'
 
 import os
-import logging
 
 from google.appengine.api import users
 from google.appengine.ext import webapp

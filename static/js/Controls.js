@@ -16,14 +16,6 @@ UserControl.prototype.initialize = function(map) {
     GEvent.addDomListener(divLogout, "click", bind(this, function() {
       document.location = this.url_auth;
     }));
-
-    var divNewSite = document.createElement("div");
-    this.setButtonStyle_(divNewSite);
-    container.appendChild(divNewSite);
-    divNewSite.appendChild(document.createTextNode("New Site"));
-    GEvent.addDomListener(divNewSite, "click", function() {
-      siteman.createNewSite();
-    });
   } else {
     var divLogin = document.createElement("div");
     this.setButtonStyle_(divLogin);
@@ -33,6 +25,18 @@ UserControl.prototype.initialize = function(map) {
       document.location = this.url_auth;
     }));
   }
+
+  var divNewSite = document.createElement("div");
+  this.setButtonStyle_(divNewSite);
+  container.appendChild(divNewSite);
+  divNewSite.appendChild(document.createTextNode("New Site"));
+  GEvent.addDomListener(divNewSite, "click", bind(this, function() {
+  	if (this.authenticated){
+      siteman.createNewSite();
+  	} else {
+  		confirmLogin(false);
+  	}
+  }));
 
   var divRefresh = document.createElement("div");
   this.setButtonStyle_(divRefresh);

@@ -2,12 +2,6 @@
 // @author Paul Peavyhouse (pv@swooby.com)
 //
 
-// TODO(pv): Custom numbered icons
-//  http://gmaps-utility-library.googlecode.com/svn/trunk/mapiconmaker/
-//    JS, no text
-//  http://people.csail.mit.edu/alexgru/markers/markers/
-//    PHP, text
-
 // Pointer to the one and only marker that we can edit at a time
 var selectedSite = null;
 
@@ -23,6 +17,17 @@ function textToHTML(text){
 
 function showLoading(show){
 	showId('loading', show);
+}
+
+function confirmLogin(special){
+	var txt = 'You must Log In';
+	if (special){
+		txt += ' as the site Creator, Contact, or Admin';
+	}
+	txt += ' to perform this action.';
+  if (confirm(txt + '\nWould you like to Log In now?')){
+    document.location = url_auth;
+  }
 }
 
 function getSiteMarkerIcon(name) {
@@ -59,6 +64,12 @@ function SitesManager(map, current_user, is_authenticated, is_admin){
   return this;
 }
 
+SitesManager.prototype.isEditable = function(site){
+  return (this.is_authenticated && 
+   ((this.current_user == site.userCreator.toLowerCase()) || this.is_admin || (this.current_user == site.contactUser.toLowerCase()))
+   );
+}
+
 SitesManager.prototype.addMarker = function(id, marker){
   this.dictMarkers[id] = marker;
 }
@@ -69,14 +80,27 @@ SitesManager.prototype.removeMarker = function(id, redraw){
     this.redrawMarkers();
 }
 
+SitesManager.prototype.removeNewSite = function(site){
+	map.removeOverlay(site.marker);
+	delete site;
+}
+
+SitesManager.prototype.replaceNewSite = function(oldSite, newProps){
+  map.removeOverlay(oldSite.marker);
+  delete oldSite;
+  // TODO(pv): Add site from newProps; until then...
+  this.loadMarkers();
+}
+
 SitesManager.prototype.getClusterMarkerIcon = function(){
   return getSiteMarkerIcon('green-dot');
 }
 
-SitesManager.prototype.updateMarker = function(marker){
+SitesManager.prototype.updateSite = function(site){
   // Marker clustering does not [currently?] allow updating a single marker
   // For now we have to clear markers and then rebuild them
   // This may not be too bad, since Clustering is pretty fast, and we are only changing one.
+  this.loadMarkers();
   
   // Another alternative is to forego this and just add the marker outside of clustering.
   // This seems reasonable considering that the marker was of interest to the user enough for them to update it.
@@ -94,12 +118,6 @@ SitesManager.prototype.redrawMarkers = function(){
   }
   this.cluster.addMarkers(arrayMarkers);
   this.cluster.refresh();
-}
-
-SitesManager.prototype.isEditable = function(site){
-	return (this.is_authenticated && 
-	 ((this.current_user == site.userCreator.toLowerCase()) || this.is_admin || (this.current_user == site.contactUser.toLowerCase()))
-	 );
 }
 
 SitesManager.prototype.loadMarkers = function(){
@@ -137,11 +155,10 @@ function ChargeSite(id, name, latlng, type, editable, newsite){
   // These arguments are the min needed to get an icon displayed on the map
   this.id = id;
   this.name = name;
-  this.latlng = latlng;
   this.type =type;
   this.editable = editable;
 
-  this.createMarker();
+  this.createMarker(latlng);
     
   return this;
 }
@@ -149,18 +166,19 @@ function ChargeSite(id, name, latlng, type, editable, newsite){
 ChargeSite.prototype.confirmCanModify = function(){
 	var canModify = this.newsite || this.editable; 
   if (!canModify){
-    if (confirm('You must Log In as the site Creator, Contact, or Admin in order to perform this action.\n' +
-      'Would you like to Log In now?')){
-      document.location = url_auth;
-    }
+  	confirmLogin(true);
   }
   return canModify;
 }
 
 ChargeSite.prototype.deleteSite = function(id){
-  server.DeleteSite(id, bind(this, function(id){
-  	siteman.removeMarker(id, true);
-  }));
+	if (this.newsite){
+		siteman.removeNewSite(this);
+	} else {
+	  server.DeleteSite(id, function(id){
+	  	siteman.removeMarker(id, true);
+	  });
+	}
 }
 
 ChargeSite.prototype.confirmDeleteSite = function(){
@@ -177,15 +195,16 @@ ChargeSite.prototype.getSiteMarkerIcon = function(id, type){
   return getSiteMarkerIcon(filename);
 }
 
-ChargeSite.prototype.createMarker = function(){
+ChargeSite.prototype.createMarker = function(latlng){
   var markerOptions = {
     icon: this.getSiteMarkerIcon(this.id, this.type),
     title: '#' + this.id + ':'+ this.name,
     draggable: true,
     bouncy: true
   };
-  this.marker = new GMarker(this.latlng, markerOptions);
+  this.marker = new GMarker(latlng, markerOptions);
   this.marker.site = this; // May cause recursion problem if JSONed/walked
+  GEvent.bind(this.marker, "dragstart", this, this.onDragStart);
   GEvent.bind(this.marker, "dragend", this, this.onDragEnd);
   GEvent.bind(this.marker, "click", this, this.onClick);
   return this.marker;
@@ -197,20 +216,28 @@ ChargeSite.prototype.showMapBlowup = function(){
 	this.marker.showMapBlowup({mapType:G_HYBRID_MAP});
 }
 
+ChargeSite.prototype.strLatLng = function(){
+	return this.marker.getLatLng().toString();
+}
+
+ChargeSite.prototype.onDragStart = function(){
+	this.lastLatLng = this.marker.getLatLng();
+}
+
 ChargeSite.prototype.onDragEnd = function(){
 	if (!this.confirmCanModify()){
-		this.marker.setLatLng(this.latlng);
+		this.marker.setLatLng(this.lastLatLng);
     return;
 	}
 	
   if (this.newsite){
-  	// Nothing to do: We haven't saved the site yet, so no need update the server
+  	this.onClick();
   } else {
     var json = {
-      latlng: this.marker.getLatLng().toString()
+      latlng: this.strLatLng()
     };
     server.UpdateSite(this.id, json, bind(this, function(site){
-    	this.latlng = site.latlng;
+      // Anything to do?
     }));
   }
 }
@@ -224,6 +251,7 @@ SitesManager.prototype.createNewSite = function(){
   var latlng = map.getCenter();
   var site = new ChargeSite('NEW', 'Unnamed', latlng, null, this.authenticated, true);
   map.addOverlay(site.marker);
+  site.onClick();
 }
 
 
@@ -259,7 +287,8 @@ ChargeSite.prototype.makeDetailsTab = function(details){
   var dom = document.createElement('div');
   dom.setAttribute('id', 'propsWrapper'+id);
   dom.setAttribute('style', 'width:400px;');
-  // TODO(pv): Would it be better/faster to DOM of below HTML?
+
+  // TODO(pv): Would it be better/faster to DOM the below HTML?
   var template = '<table width="100%;">' +
 			'  <tr id="propsHeader{0}">' +
 			'    <td><font size="5"><b>Site #{0}</b></font></td>' +
@@ -294,7 +323,7 @@ ChargeSite.prototype.makeDetailsTab = function(details){
 			'      <table width="100%;">' +
 			'        <tr>' +
 			'          <td align="left">' +
-			'            <input type="button" value="Blow Up" onclick="selectedSite.showMapBlowup()"/>' +
+			'            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
 			'          </td>' +
 			'          <td align="right">' +
 			'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
@@ -386,7 +415,7 @@ ChargeSite.prototype.openInfoWindow = function(details){
   var tabStreetView = this.makeStreetViewTab(details);
   
   var opts = {
-//  	selectedTab: 1, // maybe we would prefer SV as selected tab?
+//  	selectedTab: 1, // Possible we would prefer SV as selected tab?
 //  	maxWidth:?, // map.clientWidth - some margin
 //  	maxTitle:?, //
 //  	maxContent:? // TODO(pv): Calculate (similar to tabDetails+tabStreetView)
@@ -399,6 +428,10 @@ ChargeSite.prototype.openInfoWindow = function(details){
   
   // Always do this (even if not edit mode)
   this.calcDetailsOverflowHeight();
+  
+  if (this.newsite){
+  	this.toggleEditMode(false);
+  }
 }
 
 ChargeSite.prototype.calcDetailsOverflowHeight = function(){
@@ -413,57 +446,86 @@ ChargeSite.prototype.calcDetailsOverflowHeight = function(){
   }
 }
 
+ChargeSite.prototype.validateSite = function(site){
+  // Server won't accept '', but will access null; replace      
+  for (var key in site){
+    var val = site[key];
+    if (val == ''){
+      site[key] = null;
+    }
+  }
+  return site;
+}
+
 ChargeSite.prototype.toggleEditMode = function(save){
 
 	if (!this.confirmCanModify())
 	  return;
-		
+
   var id = this.id;
   var editing = ($('btnTwo'+id).value == 'Save');
 
-  if (this.newsite || !editing) {
+  if (editing && save){
 
-    this.getDetails(bind(this, function(site){
-    	this.renderText(site, false);
-    }));
-    
-  } else {
+    if (this.newsite){
 
-    if (save){
-	    
-	    var site = {
-	      name:$('editName').value,
+	    var name = $('editName').value;
+	    var latlng = this.strLatLng();
+	    var json = {
 	      address:$('editAddress').value,
 	      phone:$('editPhone').value,
 	      description:$('editDescription').value
-	      };
-
-      // Server won't accept '', but will access null; replace	    
-	    for (var key in site){
-	    	var val = site[key];
-	    	if (val == ''){
-	    		site[key] = null;
-	    	}
-	    }
-
-      DBG('Saving #'+this.id+':'+JSON.stringify(site));
-      if (this.newsite){
-        server.AddSite(site, bind(this, function(site){
-          DBG('Site #'+site.id+' Saved');
-          this.renderText(site, true);
-        }));
-      } else {
-        server.UpdateSite(this.id, site, bind(this, function(site){
-          DBG('Site #'+site.id+' Saved');
-          this.renderText(site, true);
-        }));
-      }
-    } else {
-      DBG('Site #'+this.id+': No changes to save; getting the latest');
-      this.getDetails(bind(this, function(site){
-      	this.renderText(site, true);
+	    };
+	    json = this.validateSite(json);
+    	
+      DBG('Adding #'+id+':'+JSON.stringify(json));
+      server.AddSite(name, latlng, json, bind(this, function(site){
+        DBG('Site #'+site.id+' Added');
+        siteman.replaceNewSite(this, site);
+      }), bind(this, function(){
+        DBG('Site #'+site.id+' FAILED to add');
+      	alert('TODO(pv): Handle "failed to add site"');
       }));
+      
+    } else {
+    	
+	    var json = {
+	    	name:$('editName').value,
+	      address:$('editAddress').value,
+	      phone:$('editPhone').value,
+	      description:$('editDescription').value
+	    };
+    	json = this.validateSite(json);
+    	
+      DBG('Updating #'+id+':'+JSON.stringify(json));
+      server.UpdateSite(id, json, bind(this, function(site){
+        DBG('Site #'+site.id+' Updated');
+        siteman.updateSite(this);
+        //this.renderText(site, editing); // Removed until siteman.updateSite can be more dynamic
+      }), bind(this, function(){
+        DBG('Site #'+site.id+' FAILED to update');
+        alert('TODO(pv): Handle "failed to update site"');
+      }));
+      
     }
+
+  } else {
+
+    DBG('Site #'+id+': No changes to save; getting the latest');
+    this.getDetails(bind(this, function(site){
+    	this.renderText(site, editing);
+    }));
+    
+  }
+}
+
+ChargeSite.prototype.selectEdit = function(input){
+	var defaultValue = input.value;
+  input.onclick = input.onfocus = function(){
+  	DBG('"'+this.value+'"?="'+defaultValue+'"');
+  	if (this.value == defaultValue){
+  		this.select();
+  	}
   }
 }
 
@@ -489,8 +551,18 @@ ChargeSite.prototype.renderText = function(site, staticText){
     $('phone' + id).innerHTML = '<input type="text" style="width:100%" id="editPhone" value="' + site.phone + '"/>';
     $('description' + id).innerHTML = '<textarea style="width:100%" rows="5" id="editDescription">' + site.description + '</textarea>';
         
-    btnOne.value = 'Cancel';
-    btnOne.onclick = function() { selectedSite.toggleEditMode(false); };
+    if (this.newsite){
+    	this.selectEdit($('editName'));
+      this.selectEdit($('editAddress'));
+      this.selectEdit($('editPhone'));
+      this.selectEdit($('editDescription'));
+    	
+      btnOne.value = 'Delete';
+      btnOne.onclick = function() { selectedSite.confirmDeleteSite(); };
+    } else {
+	    btnOne.value = 'Cancel';
+	    btnOne.onclick = function() { selectedSite.toggleEditMode(false); };
+    }
     btnTwo.value = 'Save';
     btnTwo.onclick = function() { selectedSite.toggleEditMode(true); };
   }
