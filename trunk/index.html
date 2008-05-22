@@ -58,7 +58,7 @@ google.load("maps", "2.x");
 <script type="text/javascript" src="/static/js/Controls.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var DEBUG = {% if debug_mode %}true{% else %}false{% endif %};
+var DEBUG = {% if debug_client %}true{% else %}false{% endif %};
 
 function DBG(text){
   if (DEBUG)

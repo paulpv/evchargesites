@@ -292,38 +292,7 @@
 
               // why is this stray 'Â' char in the kml?
               description = description.replace(/.Â»/g, '...');
-              
-              // Strip out things that confuse phone # search...
-              var temp = description;
-              //temp = temp.replace(/<br>/gi, '\n');
-              temp = temp.replace(/<[^>]*?>/gi, '');
-              
-              // Mostly from: http://javascript.about.com/library/blre.htm
-              var rePhone = /((\+\d{1,3}[- \.]?\(?\d\)?[- \.]?\d{1,5})|(\(?\d{2,6}\)?))[- \.]?(\d{3,4})[- \.]?(\d{4})(( x| ext)\d{1,5}){0,1}/gi;
-              var phone = temp.match(rePhone);
-              if (phone){
-                var i = 0;
-                if (phone.length > 1){
-                  var txt = 'Found more than one phone # for site.';
-                  for(i=0; i<phone.length; i++){
-                    txt += '\n'+i+') "'+phone[i]+'"';
-                  }
-                  txt += '\nWhich one do you want to use?';
-                  var choice = prompt(txt, 0);
-                  i = (choice) ? parseInt(choice) : 0;
-                }
-                phone = phone[i];
-                //alert('Found phone # "'+phone+'"');
-                
-                description = description.replace(phone, '');
-
-                // TODO(pv): Fine tune the phone #? (consistent look)
-
-              } else {
-                phone = '???-???-????';
-                //alert('Could not find phone # in:\n"'+desc2+'"');
-              }
-              
+                            
               //alert('before:'+description);
               description = description.replace(/<\/?span[^>]*?>/gi, ''); // remove all SPANs
               description = description.replace(/\n/g, ''); // remove all \n
@@ -347,6 +316,38 @@
               //alert('after:"'+description+'"');
               
               var address = "Unknown: Please manually move from description (if applicable)";
+
+              // Strip out things that confuse phone # search...
+              var temp = description;
+              temp = temp.replace(/<\/?[^>]*?>/gi, '');
+              
+              // Mostly from: http://javascript.about.com/library/blre.htm
+              var rePhone = /((\+\d{1,3}[- \.]?\(?\d\)?[- \.]?\d{1,5})|(\(?\d{2,6}\)?))[- \.]?(\d{3,4})[- \.]?(\d{4})(( ?x| ?ext)\d{1,5}){0,1}/gi;
+              var phone = temp.match(rePhone);
+              if (phone){
+                var i = 0;
+                if (phone.length > 1){
+                  var txt = 'Found more than one phone # for site.';
+                  for(i=0; i<phone.length; i++){
+                    txt += '\n'+i+') "'+phone[i]+'"';
+                  }
+                  txt += '\nWhich one do you want to use?';
+                  var choice = prompt(txt, 0);
+                  i = (choice) ? parseInt(choice) : 0;
+                }
+                phone = phone[i];
+                alert('Found phone # "'+phone+'"');
+                
+                description = description.replace(phone, '');
+
+                // TODO(pv): Fine tune the phone #? (for a consistent look)
+                //temp = phone.replace(/[^\d]*(?!(...
+                //var part = phone.match(/\d*...
+
+              } else {
+                phone = '???-???-????';
+                alert('Could not find phone # in:\n"'+temp+'"');
+              }
               
               var props = {
                 name: name,
