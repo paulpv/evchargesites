@@ -60,14 +60,6 @@ google.load("maps", "2.x");
 
 var DEBUG = {% if debug_client %}true{% else %}false{% endif %};
 
-function DBG(text){
-  if (DEBUG)
-    if (GLog)
-      GLog.write(text);
-    else
-      alert(text);
-}
-
 // === Some cookie parameters ===
 var cookiename = "mapinfo";
 var expiredays = 365; // TODO(pv): Better persistance of User Preferences
@@ -93,8 +85,8 @@ var svMarker;
 var lastSvMarkerLocation;
 var svPanorama;
 var siteman;
-var current_user = "{{current_user}}";
-var is_authenticated = {% if current_user %}true{% else %}false{% endif %};
+var current_user = {% if current_user %}{{current_user}}{% else %}null{% endif %};
+var is_authenticated = current_user != null;
 var url_auth = "{{url_auth}}";
 var url_admin = {% if url_admin %}"{{url_admin}}"{% else %}null{% endif %};
 var is_admin = url_admin != null;
@@ -152,7 +144,7 @@ function onLoad(){
 	}
 
   // This takes awhile to load, so have it happen async...
-  siteman = new SitesManager(map, current_user, is_authenticated, is_admin);
+  siteman = new SitesManager(map, current_user, is_admin);
   window.setTimeout('siteman.loadMarkers()', 0);
 
   map.addControl(new GMapTypeControl());

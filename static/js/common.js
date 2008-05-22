@@ -1,4 +1,12 @@
 
+function DBG(text){
+  if (DEBUG)
+    if (GLog)
+      GLog.write(text);
+    else
+      alert(text);
+}
+
 // For callback objects to bind a method to themself
 function bind(obj, func){
   return function(){
