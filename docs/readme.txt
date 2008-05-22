@@ -11,7 +11,8 @@
       http://core.mapmundi.org/mapPortal.do?key=nXrOfnvmKdm7agntOkNlAF4q2bVpdEFfcHyau011kNkOIiHTOEq4G2JQTunSyArklStPVvOXSjGD69NaiQsLyI&color=blue
 
   TODO:
-    Add [at least stub] failure handling functions to all "server." calls
+    Support multiple phone numbers?
+      Make sense of Creator vs. Contact info
     Ranking
     User/Anonymous comments
     BUG: Cookie currently expires after one year; need better option

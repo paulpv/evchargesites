@@ -1,0 +1,213 @@
+
+Revision history from now deleted typoed Google project site:
+  http://code.google.com/p/evchargersites
+
+Revision: 8 
+Author:  p...@swooby.com  
+Date:  May 14 (6 days ago)  
+Log message
+EVChargeSites.js: Changed SitesManager constructor to know current_user, is_authenticated, is_admin
+EVChargeSites.js: Added SitesManager.isEditable to check is user is authenticated and
+creator/admin/contact
+EVChargeSites.js: Added ChargeSite.confirmCanModify to check if marker is editable, if not yes/no
+prompt for login
+EVChargeSites.js: Removed unneeded propsEqual
+EVChargeSites.js: Switch placement of Save & Cancel buttons
+EVChargeSites.js: Some clean up of code (still needs another pass or two)
+import/main/rpc.py: Using Guido's recommendation to avoid needing wsgiutil
+index.html: Storing template variables current_user, is_authenticated, is_admin
+index.html: Fixing StreetView onNewLocation movement problem
+rpc.py: Adding stubs for User and Rating models (that will eventually be added to DB & UI)
+rpc.py: get_sites now also returns userCreator and contactUser
+
+ Modified /trunk/import.py diff 
+ Modified /trunk/index.html diff 
+ Modified /trunk/main.py diff 
+ Modified /trunk/rpc.py diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+
+Revision: 7 
+Author:  p...@swooby.com  
+Date:  May 14 (6 days ago)  
+Log message
+common.js: Adding simple but *very* important "bind" function
+Controls.js: Moving custom map controls to Controls.js
+EVChargeSites.js: Renaming "editingMarker" to "selectedSite"
+EVChargeSites.js: littering "bind" function in [hopefully] all of the right places
+EVChargeSites.js: Removing all use and need for ChargeSite.props and ChargeSite.toJSON
+EVChargeSites.js: Attempt at refactoring ugly createNewSite/openInfoWindow/toggleEditMode
+EVChargeSites.js: Moving code around for StreeView (not yet used)
+index.html: Tweaking SV behavior a tad
+main.py: Minor refactoring of vars that are passed to the django template
+
+ Modified /trunk/index.html diff 
+ Modified /trunk/index.yaml diff 
+ Modified /trunk/main.py diff 
+ Added /trunk/static/js/Controls.js diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+ Modified /trunk/static/js/common.js diff 
+
+Revision: 6 
+Author:  p...@swooby.com  
+Date:  May 09, 2008  
+Log message
+Adding "New" site icon (simple blue one for now)
+Changing "Zoom" icon
+Removing icons I don't ever plan to use
+EVChargeSites.js: added showMapBlowup, confirmDeleteSite
+EVChargeSites.js: can now delete markers from map
+EVChargeSites.js: markers now have "site" property to ChargeSite object
+EVChargeSites.js: changing editingSite to editingMarker
+EVChargeSites.js: starting the code to be able to add new site (for now the code is horrid)
+index.html: added GKeyboardHandler
+index.html: broke MiscControls in to UserControls(Logon,New,Refresh) &
+AdminControls(Source,Import,Admin,Analytics)
+index.html: superficial changes to dragzoom UI
+rpc.py: _deleted now defaults to False
+rpc.py: get_sites only returns sites where _deleted=False
+rpc.py: fix bug when updating latlng w/ string values (now typecast to float)
+rpc.py: delete_site now returns site deleted (so client callback can delete theirs on success)
+
+ Added /.project diff 
+ Added /.pydevproject diff 
+ Modified /trunk/index.html diff 
+ Modified /trunk/index.yaml diff 
+ Modified /trunk/main.py diff 
+ Modified /trunk/rpc.py diff 
+ Deleted /trunk/static/img/activity.gif diff 
+ Added /trunk/static/img/markers/site/blue-dot.png diff 
+ Added /trunk/static/img/markers/site/blue.png diff 
+ Deleted /trunk/static/img/pencil.gif diff 
+ Added /trunk/static/img/zoom-control-active.png diff 
+ Added /trunk/static/img/zoom-control-inactive.png diff 
+ Deleted /trunk/static/img/zoomrect.gif diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+
+Revision: 5 
+Author:  p...@swooby.com  
+Date:  May 08, 2008  
+Log message
+rpc.py: many changes
+  Moved RPC code from main.py to here
+  Renamed methods to not use camelCase (now use under_score)
+  Improved security of the code and AccessDenied/NotFound exceptions
+  RPC results return valid JSON objects by default; RPCHandler.JSONEncoder removed
+  Changed Site model: Added some new props, made some props "private"
+  Added update_site and obliterate_site
+main.py: removed RPC code (moved to rpc.py); cleaned up the code a lot
+app.yaml: RPC now served entirely by rpc.py
+import.html: Updated to reflect new server method names
+index.html: Calcs "authenticated" and passes to SitesManager
+client.js: updating to reflect changed server method names
+EVChargeSites.js: MANY CHANGES!
+  Renamed getSiteIcon to getSiteMarkerIcon
+  SitesManager can now be told that user is authenticated (allows editable markers)
+  Renamed refreshMarkers to redrawMarkers
+  Changes to reflect new server method names and DB properties
+  Refactored property get/save code in onClick/toggleEditMode (removed getInfo/saveInfo/infoStatic
+as a result)
+  Added phone # to editable UI
+
+ Modified /trunk/app.yaml diff 
+ Modified /trunk/import.html diff 
+ Modified /trunk/index.html diff 
+ Modified /trunk/main.py diff 
+ Added /trunk/rpc.py diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+ Modified /trunk/static/js/client.js diff 
+
+Revision: 4 
+Author:  p...@swooby.com  
+Date:  May 07, 2008  
+Log message
+client.js: adding getSite method
+client.js: changing getURL to POST
+EVChargeSites.js: fixing static image URLs
+EVChargeSites.js: getting loadMarkers to work
+EVChargeSites.js: changing ChargeSite.name to ChargeSite.title
+app.yaml: fixing URLs to support /, /rpc, and /import (admin only)
+import.py: adding, to handle /import
+import.html: fixing static image URLs
+import.html: removing "client" function prefixes
+import.html: ripping out "wrapper" and "header" divs
+index.html: now using Google AJAX API (they fixed problem w/ custom GControls)
+index.html: Adding a few more buttons to MiscControl
+index.html: proper window resize event handleing
+
+ Modified /trunk/app.yaml diff 
+ Modified /trunk/import.html diff 
+ Added /trunk/import.py diff 
+ Modified /trunk/index.html diff 
+ Modified /trunk/main.py diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+ Modified /trunk/static/js/client.js diff 
+
+Revision: 3 
+Author:  p...@swooby.com  
+Date:  May 06, 2008  
+main.py: Removing external simplejson dependency (using internal version that comes w/ django)
+main.py: Proper GET and POST handling
+client.js: Proper GET and POST Request
+EVChargeSite.js First RPC calls to server (server.getSites and server.getSite)
+
+ Modified /trunk/index.html diff 
+ Modified /trunk/main.py diff 
+ Deleted /trunk/simplejson diff 
+ Modified /trunk/static/js/EVChargeSites.js diff 
+ Modified /trunk/static/js/client.js diff 
+ Modified /trunk/static/js/common.js diff 
+
+Revision: 2 
+Author:  p...@swooby.com  
+Date:  May 02, 2008  
+Initial checkin (still many problems, especially w/ IE)
+
+ Added /trunk/app.yaml diff 
+ Added /trunk/import.html diff 
+ Added /trunk/index.html diff 
+ Added /trunk/index.yaml diff 
+ Added /trunk/main.py diff 
+ Added /trunk/simplejson diff 
+ Added /trunk/simplejson/__init__.py diff 
+ Added /trunk/simplejson/decoder.py diff 
+ Added /trunk/simplejson/encoder.py diff 
+ Added /trunk/simplejson/jsonfilter.py diff 
+ Added /trunk/simplejson/scanner.py diff 
+ Added /trunk/static diff 
+ Added /trunk/static/img diff 
+ Added /trunk/static/img/activity.gif diff 
+ Added /trunk/static/img/loading.gif diff 
+ Added /trunk/static/img/markers diff 
+ Added /trunk/static/img/markers/cab-shadow.png diff 
+ Added /trunk/static/img/markers/cab.png diff 
+ Added /trunk/static/img/markers/red-pushpin-shadow.png diff 
+ Added /trunk/static/img/markers/red-pushpin.png diff 
+ Added /trunk/static/img/markers/site diff 
+ Added /trunk/static/img/markers/site/green-dot.png diff 
+ Added /trunk/static/img/markers/site/green.png diff 
+ Added /trunk/static/img/markers/site/marker-shadow.png diff 
+ Added /trunk/static/img/markers/site/red-dot.png diff 
+ Added /trunk/static/img/markers/site/red-plus.png diff 
+ Added /trunk/static/img/markers/site/red.png diff 
+ Added /trunk/static/img/pencil.gif diff 
+ Added /trunk/static/img/zoomrect.gif diff 
+ Added /trunk/static/js diff 
+ Added /trunk/static/js/EVChargeSites.js diff 
+ Added /trunk/static/js/client.js diff 
+ Added /trunk/static/js/common.js diff 
+ Added /trunk/static/js/third_party diff 
+ Added /trunk/static/js/third_party/ClusterMarker diff 
+ Added /trunk/static/js/third_party/ClusterMarker/obfuscated diff 
+ Added /trunk/static/js/third_party/ClusterMarker/obfuscated/ClusterMarker.js diff 
+ Added /trunk/static/js/third_party/ClusterMarker/unobfuscated diff 
+ Added /trunk/static/js/third_party/ClusterMarker/unobfuscated/ClusterMarker.js diff 
+ Added /trunk/static/js/third_party/dragzoom diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2 diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/docs diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/docs/examples.html diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/docs/reference.html diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/examples diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/src diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/src/dragzoom.js diff 
+ Added /trunk/static/js/third_party/dragzoom/1.2/src/dragzoom_packed.js diff 
+ Added /trunk/static/js/third_party/json2.js diff 

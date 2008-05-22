@@ -48,6 +48,7 @@ class MainPage(webapp.RequestHandler):
       url_auth = users.create_login_url(uri)
 
     template_values = {
+      'debug_mode': DEBUG,
       'api_key': API_KEYS.get(hostname,''),
       'user_list': user_list.values(),
       'current_user': current_user,
