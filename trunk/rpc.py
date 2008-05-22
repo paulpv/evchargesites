@@ -127,11 +127,18 @@ class RPCMethods:
     self._handler = handler
 #    self.addSite('testing', '0,0')
 
-  def _ToString(self, value):
-    try:
-      return unicode(value)
-    except UnicodeError:
-      return repr(value)
+  def _ToJSON(self, value):
+    if isinstance(value, users.User):
+      value = dict(
+        nickname=value.nickname(),
+        email=value.email(),
+        )
+    else:
+      try:
+        value = unicode(value)
+      except UnicodeError:
+        value = repr(value)
+    return value
 
   def _is_admin(self):
     return users.is_current_user_admin()
@@ -162,7 +169,7 @@ class RPCMethods:
       if value is None:
         value = ""
       else:
-        value = self._ToString(value)
+        value = self._ToJSON(value)
       values.append(value)
       
     return values
@@ -182,7 +189,7 @@ class RPCMethods:
       if value is None:
         value = ""
       else:
-        value = self._ToString(value)
+        value = self._ToJSON(value)
       properties[key] = value
     
     return properties

@@ -46,13 +46,22 @@ class MainPage(webapp.RequestHandler):
       url_auth = users.create_logout_url(uri)
     else:
       url_auth = users.create_login_url(uri)
-    return url_auth    
+    return url_auth
+  
+  def current_user(self):
+    current_user = users.get_current_user()
+    if current_user:
+      current_user = dict(
+        nickname=current_user.nickname(),
+        email=current_user.email(),
+        )
+    return current_user    
   
   def get(self):
 
     request = self.request
     api_key = self.api_key()
-    current_user = users.get_current_user()
+    current_user = self.current_user()
     debug_client = not self.is_production() # TODO(pv): or certain user(s)?
     url_admin = self.url_admin()
     url_auth = self.url_auth()

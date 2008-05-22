@@ -63,9 +63,12 @@ function getSiteMarkerIcon(name) {
 }
 
 
-function SitesManager(map, current_user, is_authenticated, is_admin){
-	this.current_user = (current_user) ? current_user.toLowerCase() : null;
-	this.is_authenticated = is_authenticated;
+function SitesManager(map, current_user, is_admin){
+  for(var key in current_user){
+    current_user[key] = current_user[key].toLowerCase();
+  }
+	this.current_user = current_user;
+	this.is_authenticated = current_user != null;
 	this.is_admin = is_admin;
   this.dictMarkers = {};
   this.cluster = new ClusterMarker(map, {clusterMarkerIcon:this.getClusterMarkerIcon()});
@@ -74,8 +77,9 @@ function SitesManager(map, current_user, is_authenticated, is_admin){
 
 SitesManager.prototype.isEditable = function(site){
   return (this.is_authenticated && 
-   ((this.current_user == site.userCreator.toLowerCase()) || this.is_admin || (this.current_user == site.contactUser.toLowerCase()))
-   );
+   ((this.current_user.email == site.userCreator.email.toLowerCase()) ||
+     this.is_admin ||
+     (this.current_user.email == site.contactUser.email.toLowerCase())));
 }
 
 SitesManager.prototype.addMarker = function(id, marker){
@@ -315,7 +319,7 @@ ChargeSite.prototype.makeDetailsTab = function(details){
   var template = '<table width="100%;">' +
 			'  <tr id="propsHeader{0}">' +
 			'    <td><font size="5"><b>Site #{0}</b></font></td>' +
-			'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{1}</a></font></td>' +
+			'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{2}</a></font></td>' +
 			'  </tr>' +
 			'  <tr>' +
 			'    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
@@ -323,19 +327,19 @@ ChargeSite.prototype.makeDetailsTab = function(details){
 			'      <table border="1" width="100%">' +
 			'        <tr>' +
 			'          <td valign="top" align="right"><b>Name:</b></td>' +
-			'          <td valign="top" style="width:100%;"><span id="name{0}">{2}</span></td>' +
+			'          <td valign="top" style="width:100%;"><span id="name{0}">{3}</span></td>' +
 			'        </tr>' +
 			'        <tr>' +
 			'          <td valign="top" align="right"><b>Address:</b></td>' +
-			'          <td valign="top"><span id="address{0}">{3}</span></td>' +
+			'          <td valign="top"><span id="address{0}">{4}</span></td>' +
 			'        </tr>' +
 			'        <tr>' +
 			'          <td valign="top" align="right"><b>Phone:</b></td>' +
-			'          <td valign="top"><span id="phone{0}">{4}</span></td>' +
+			'          <td valign="top"><span id="phone{0}">{5}</span></td>' +
 			'        </tr>' +
 			'        <tr>' +
 			'          <td valign="top" align="right"><b>Description:</b></td>' +
-			'          <td valign="top"><span id="description{0}">{5}</span></td>' +
+			'          <td valign="top"><span id="description{0}">{6}</span></td>' +
 			'        </tr>' +
 			'      </table>' +
 			'      </div>' +
@@ -359,7 +363,8 @@ ChargeSite.prototype.makeDetailsTab = function(details){
 			'</table>';
 	dom.innerHTML = template.format(
 			      id,
-			      textToHTML(details.userCreator), // document.createTextNode(   
+            escape(details.userCreator.email),   
+			      escape(details.userCreator.nickname),   
 			      textToHTML(details.name),
 			      textToHTML(details.address),
 			      textToHTML(details.phone),
