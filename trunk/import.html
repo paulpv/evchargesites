@@ -18,7 +18,9 @@
     
     function renderSiteList(){
       showProgress(true);
-      server.GetSites(renderCallback);
+      server.GetSites(renderCallback, function(){
+        alert('ERROR: GetSites');
+      });
     }
     
     function renderCallback(rs){
@@ -67,13 +69,8 @@
       tr = <tr id='rowNew'>
           <td align='center'><input type='button' value={'* (' + rows.length + ')'} onclick='selectAllSites()' style='width:100%'/></td>
         </tr>;
-      for(i=1; i<cols.length; i++){
-        tr.td += <td>
-            <textarea id={'text'+col} style='width:100%'> </textarea>
-          </td>;
-      }
+      tr.td += <td colspan={cols.length-1}><hr width='100%'/></td>;
       tr.td += <td align='center' nowrap='true'>
-            <input id='btnAdd' type='button' value='Add' onclick='addSite()'/>
             <input id='btnDeleteSelected' type='button' value='Delete Selected' onclick='deleteSelected()'/>
           </td>;
       table.tr += tr;
@@ -104,24 +101,6 @@
       }
     }
 
-    function addSite(jsonObject, batch){
-      if (jsonObject == null) 
-        jsonObject = $('jsonObjectToAdd').value;
-      batch = (batch == true);
-      
-      var rowId = $('rowNew');
-      var props = getInputProperties(rowId);
-      if (props){
-        if (batch) 
-          $('btnAdd').disabled = true;
-        //server.AddSite(props);
-        if (batch) {
-          renderSiteList();
-          $('btnAdd').disabled = false;
-        }
-      }
-    }
-    
     function getInputProperties(rowElement){
       var props;
       var tr = domToE4X(rowElement);
@@ -141,7 +120,11 @@
 
     function deleteSite(id, refresh){
       $('btnDelete' + id).disabled = true;
-      server.DeleteSite(id);
+      server.DeleteSite(id, function(){
+        // onSuccess
+      }, function(){
+        alert('ERROR: DeleteSite');
+      });
       if (refresh != false) 
         renderSiteList();
     }
@@ -178,25 +161,27 @@
 
     function importData(btnId, url, callbackForEach){
       
-      var btn = $(btnId);
-      btn.disabled = true;
       
       if (confirm('Fetch the following URL?\n\n' + url)) {
+      
+        var btn = $(btnId);
+        btn.disabled = true;
+      
         // Proxy the cross-site download request to the server
         server.GetUrl(url, function(response){
+        
           if (response.status_code == 200){
           
             var content = response.content;
             var r;
             
-            // Remove any xml header at beginning...
+            // Remove any xml header at beginning (breaks E4X)...
             r = /^<\?xml.*?\?>.*?\n/i;
             content = content.replace(r, '');
-            // Remove any xmlns attribute inside the root node... 
+            // Remove any xmlns attribute inside the root node (breaks E4X)... 
             r = /^<(.*?) (xmlns=(?:".*?"|'.*?'))(.*?)>/i;            
             content = content.replace(r, '<$1$3>');
             
-            // Remove any existing xml header
             var xml = new XML(content);
             
  	          // TODO(pv): Would a progress dialog here be at all responsive?
@@ -212,15 +197,25 @@
                 var latlng = props.latlng;
                 delete props.name;
                 delete props.latlng;
-                server.AddSite(name, latlng, props);
+                server.AddSite(name, latlng, props, function(){
+                  // onSuccess
+                }, function(){
+                  // onError
+                  alert('ERROR: AddSite');
+                });
+              }, function(){
+                btn.disabled = false;
+                renderSiteList();              
               });
-              renderSiteList();
+            } else {
+              btn.disabled = false;
             }
 	        }
+        }, function(){
+          btn.disabled = false;
+          alert('ERROR: GetURL');
         });
       }
-      
-      btn.disabled = false;
     }
 
     function xmlGetValue(root, tagname){
@@ -236,7 +231,7 @@
     function importEVChargerMaps(){
       importData('btnImportEVChargerMaps',
           'http://www.evchargermaps.com/XMLs/sitesxml.xml',
-          function(xml, submitCallback){
+          function(xml, callbackForEach, callbackComplete){
 
             var TechList = {
               "spi": "SPI",
@@ -277,33 +272,93 @@
                 comments: "TODO(pv): Implement comments"
               };
               
-              submitCallback(props);
+              callbackForEach(props);
             }
+            callbackComplete();
           });
     }
         
     function importNWChargerSites(){
       importData('btnImportNWChargeSites',
           'http://maps.google.com/maps/ms?ie=UTF8&hl=en&oe=UTF8&msa=0&msid=106101835885297831085.00044b128b91711066112&output=kml',
-          function(xml, submitCallback){
+          function(xml, callbackForEach, callbackComplete){
             for each (var placemark in xml.Document.Placemark) {
             
               var coords = placemark.Point.coordinates.toString().split(',');
 
               var name = placemark.name.toString();
-              var address = "TBD: Please manually move from description";
-              var description = placemark.description.toString();
               var latlng = '('+coords[1] + ',' + coords[0]+')';
+              var description = placemark.description.toString();
+
+              // why is this stray 'Â' char in the kml?
+              description = description.replace(/.Â»/g, '...');
+              
+              // Strip out things that confuse phone # search...
+              var temp = description;
+              //temp = temp.replace(/<br>/gi, '\n');
+              temp = temp.replace(/<[^>]*?>/gi, '');
+              
+              // Mostly from: http://javascript.about.com/library/blre.htm
+              var rePhone = /((\+\d{1,3}[- \.]?\(?\d\)?[- \.]?\d{1,5})|(\(?\d{2,6}\)?))[- \.]?(\d{3,4})[- \.]?(\d{4})(( x| ext)\d{1,5}){0,1}/gi;
+              var phone = temp.match(rePhone);
+              if (phone){
+                var i = 0;
+                if (phone.length > 1){
+                  var txt = 'Found more than one phone # for site.';
+                  for(i=0; i<phone.length; i++){
+                    txt += '\n'+i+') "'+phone[i]+'"';
+                  }
+                  txt += '\nWhich one do you want to use?';
+                  var choice = prompt(txt, 0);
+                  i = (choice) ? parseInt(choice) : 0;
+                }
+                phone = phone[i];
+                //alert('Found phone # "'+phone+'"');
+                
+                description = description.replace(phone, '');
+
+                // TODO(pv): Fine tune the phone #? (consistent look)
+
+              } else {
+                phone = '???-???-????';
+                //alert('Could not find phone # in:\n"'+desc2+'"');
+              }
+              
+              //alert('before:'+description);
+              description = description.replace(/<\/?span[^>]*?>/gi, ''); // remove all SPANs
+              description = description.replace(/\n/g, ''); // remove all \n
+              description = description.replace(/&nbsp;/gi, ' '); // replace '&nbsp;' w/ ' '
+              description = description.replace(/<br>/gi, '\n'); // replace BR w/ \n
+              description = description.replace(/\n(\s*\n)+/g, '\n'); // remove duplicate \n
+              description = description.replace(/<(div)[^>]*?>/gi, '<$1>'); // remove attributes from DIV
+              description = description.replace(/<(\w+)[^>]*?>\s*<\/\1>/gi, ''); // Remove empty tags
+              description = description.replace(/<\/(\w+[^>]*?)>\s*</gi, '</$1><'); // remove all \s *between* tags                            
+              description = description.replace(/(<\w+[^>]*?>)\s*/gi, '$1'); // remove trailing \s in value after >
+              description = description.replace(/\s*(<\/\w+[^>]*?>)/gi, '$1'); // remove leading \s in value before </
+              description = description.replace(/(<\/\w+[^>]*?>)(?!\n)/gi, '$1\n'); // suffix </*> w/ \n
+              description = description.replace(/^\s*/, '').replace(/\s*$/, ''); // Strip leading/trailing white spaces
+              description = description.replace(/\n(?!<\/?div)/gi, '<br>\n'); // Replace \n w/ BR\n
+              description = description.replace(/<(\/?)(\w+)([^>]*?)>/gm, function(m, m1, m2, m3){
+                return '<' + m1 + m2.toUpperCase() + m3 + '>'; // UpperCase all HTML tags
+              });              
+              if (description.indexOf('<DIV>') != 0){
+                description = '<DIV>'+description+'</DIV>';
+              }
+              //alert('after:"'+description+'"');
+              
+              var address = "Unknown: Please manually move from description (if applicable)";
               
               var props = {
                 name: name,
+                latlng: latlng,
                 address: address,
-                description: description,
-                latlng: latlng
+                phone: phone,
+                description: description
               };
 
-              submitCallback(props);
+              callbackForEach(props);
             }
+            callbackComplete();
           });
     }
          

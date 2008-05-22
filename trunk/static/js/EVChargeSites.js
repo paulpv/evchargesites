@@ -8,9 +8,17 @@ var selectedSite = null;
 
 function textToHTML(text){
   if (text) {
-    text = text.replace(/\n/g, '<br>\n');
+    text = text.replace(/(\s*<br>\s*)*(\n+)/gi, function(m, m1, m2){
+    	if (!m1){
+    		// \n w/ no preceeding <BR>
+    		return '<BR>\n';
+    	} else {
+    		return m;
+    	}
+    });
+    text = text.replace(/(\s*<br>\s*){3,}/gi, '<BR><BR>\n'); // limit BR to 2
   } else {
-  	text = '&nbsp;'
+  	text = '&nbsp;'; // For IE
   }
   return text;
 }
@@ -100,7 +108,8 @@ SitesManager.prototype.updateSite = function(site){
   // Marker clustering does not [currently?] allow updating a single marker
   // For now we have to clear markers and then rebuild them
   // This may not be too bad, since Clustering is pretty fast, and we are only changing one.
-  this.loadMarkers();
+  this.loadMarkers(bind(site,site.onClick));
+  
   
   // Another alternative is to forego this and just add the marker outside of clustering.
   // This seems reasonable considering that the marker was of interest to the user enough for them to update it.
@@ -120,7 +129,7 @@ SitesManager.prototype.redrawMarkers = function(){
   this.cluster.refresh();
 }
 
-SitesManager.prototype.loadMarkers = function(){
+SitesManager.prototype.loadMarkers = function(callbackSuccess, callbackFail){
   showLoading(true);
   this.dictMarkers = {};
   server.GetSites(bind(this, function(sites) {
@@ -142,7 +151,15 @@ SitesManager.prototype.loadMarkers = function(){
 	  }
 	  this.redrawMarkers();
 	  showLoading(false);
-  }));
+	  if (callbackSuccess){
+	  	callbackSuccess();
+	  }
+  }), function(){
+  	alert('ERROR: GetSites');
+  	if (callbackFail){
+  		callbackFail();
+  	}
+  });
 }
 
 
@@ -177,6 +194,8 @@ ChargeSite.prototype.deleteSite = function(id){
 	} else {
 	  server.DeleteSite(id, function(id){
 	  	siteman.removeMarker(id, true);
+	  }, function(){
+	  	alert('ERROR: DeleteSite');
 	  });
 	}
 }
@@ -238,7 +257,9 @@ ChargeSite.prototype.onDragEnd = function(){
     };
     server.UpdateSite(this.id, json, bind(this, function(site){
       // Anything to do?
-    }));
+    }), function(){
+    	alert('ERROR: UpdateSite');
+    });
   }
 }
 
@@ -272,6 +293,8 @@ ChargeSite.prototype.getDetails = function(callback){
 	  server.GetSite(this.id, function(json){
 	    DBG('Queried:'+JSON.stringify(json));
 	    callback(json);
+	  }, function(){
+	  	alert('ERROR: GetSite');
 	  });
   }
 }
@@ -292,12 +315,12 @@ ChargeSite.prototype.makeDetailsTab = function(details){
   var template = '<table width="100%;">' +
 			'  <tr id="propsHeader{0}">' +
 			'    <td><font size="5"><b>Site #{0}</b></font></td>' +
-			'    <td align="right"><font size="2">Created by: {1}</font></td>' +
+			'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{1}</a></font></td>' +
 			'  </tr>' +
 			'  <tr>' +
-			'    <td colspan="2" style="height:100%;" valign="top">' +
-			'      <div id="divProps{0}" style="overflow-y:auto;">' +
-			'      <table border="1">' +
+			'    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
+			'      <div id="divProps{0}" style="overflow:auto;">' +
+			'      <table border="1" width="100%">' +
 			'        <tr>' +
 			'          <td valign="top" align="right"><b>Name:</b></td>' +
 			'          <td valign="top" style="width:100%;"><span id="name{0}">{2}</span></td>' +
@@ -427,14 +450,14 @@ ChargeSite.prototype.openInfoWindow = function(details){
       opts);
   
   // Always do this (even if not edit mode)
-  this.calcDetailsOverflowHeight();
+  this.calcDetailsOverflow();
   
   if (this.newsite){
   	this.toggleEditMode(false);
   }
 }
 
-ChargeSite.prototype.calcDetailsOverflowHeight = function(){
+ChargeSite.prototype.calcDetailsOverflow = function(){
   var id = this.id;
   var divWrapper = $('propsWrapper'+id);
   var divHeader = $('propsHeader'+id);
@@ -443,6 +466,7 @@ ChargeSite.prototype.calcDetailsOverflowHeight = function(){
   if (divWrapper && divHeader && divFooter && divProps) { 
     var height = divWrapper.offsetHeight - divHeader.offsetHeight - divFooter.offsetHeight;
     divProps.style.height = height + 'px';
+    //divProps.style.width = divWrapper.offsetWidth;
   }
 }
 
@@ -483,8 +507,8 @@ ChargeSite.prototype.toggleEditMode = function(save){
         DBG('Site #'+site.id+' Added');
         siteman.replaceNewSite(this, site);
       }), bind(this, function(){
-        DBG('Site #'+site.id+' FAILED to add');
-      	alert('TODO(pv): Handle "failed to add site"');
+        DBG('Site #'+this.id+' FAILED to add');
+      	alert('ERROR: AddSite');
       }));
       
     } else {
@@ -503,8 +527,8 @@ ChargeSite.prototype.toggleEditMode = function(save){
         siteman.updateSite(this);
         //this.renderText(site, editing); // Removed until siteman.updateSite can be more dynamic
       }), bind(this, function(){
-        DBG('Site #'+site.id+' FAILED to update');
-        alert('TODO(pv): Handle "failed to update site"');
+        DBG('Site #'+this.id+' FAILED to update');
+        alert('ERROR: UpdateSite');
       }));
       
     }
@@ -546,10 +570,11 @@ ChargeSite.prototype.renderText = function(site, staticText){
 	  $('phone' + id).innerHTML = textToHTML(site.phone);
 	  $('description' + id).innerHTML = textToHTML(site.description);
   } else {
-    $('name' + id).innerHTML = '<input type="text" style="width:100%" id="editName" value="' + site.name + '"/>';
-    $('address' + id).innerHTML = '<textarea style="width:100%" rows="3" id="editAddress">' + site.address + '</textarea>';
-    $('phone' + id).innerHTML = '<input type="text" style="width:100%" id="editPhone" value="' + site.phone + '"/>';
-    $('description' + id).innerHTML = '<textarea style="width:100%" rows="5" id="editDescription">' + site.description + '</textarea>';
+  	var style = 'width:100%'; // TODO(pv): For long contiguous text, this wraps bad in IE
+    $('name' + id).innerHTML = '<input type="text" style="'+style+'" id="editName" value="' + site.name + '"/>';
+    $('address' + id).innerHTML = '<textarea style="'+style+'" rows="3" id="editAddress">' + site.address + '</textarea>';
+    $('phone' + id).innerHTML = '<input type="text" style="'+style+'" id="editPhone" value="' + site.phone + '"/>';
+    $('description' + id).innerHTML = '<textarea style="'+style+'" rows="5" id="editDescription">' + site.description + '</textarea>';
         
     if (this.newsite){
     	this.selectEdit($('editName'));

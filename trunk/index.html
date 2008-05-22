@@ -58,11 +58,14 @@ google.load("maps", "2.x");
 <script type="text/javascript" src="/static/js/Controls.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var DEBUG = true;
+var DEBUG = {% if debug_mode %}true{% else %}false{% endif %};
 
 function DBG(text){
   if (DEBUG)
-    GLog.write(text);
+    if (GLog)
+      GLog.write(text);
+    else
+      alert(text);
 }
 
 // === Some cookie parameters ===

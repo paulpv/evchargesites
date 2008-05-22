@@ -127,6 +127,12 @@ class RPCMethods:
     self._handler = handler
 #    self.addSite('testing', '0,0')
 
+  def _ToString(self, value):
+    try:
+      return unicode(value)
+    except UnicodeError:
+      return repr(value)
+
   def _is_admin(self):
     return users.is_current_user_admin()
   
@@ -142,6 +148,9 @@ class RPCMethods:
       self._is_contact(site, user)) 
   
   def _get_site_id_and_values(self, site, keys=None):
+    """Returns list of values in a specific order (w/ id first)
+    """
+    # TODO(pv): combine logic w/ _get_site_id_and_properties
     if not keys:
       keys = site.properties().keys()
     elif 'id' in keys:
@@ -153,12 +162,15 @@ class RPCMethods:
       if value is None:
         value = ""
       else:
-        value = str(value)
+        value = self._ToString(value)
       values.append(value)
       
     return values
 
   def _get_site_id_and_properties(self, site, keys=None):
+    """Returns dict of values not in a specific order
+    """
+    # TODO(pv): combine logic w/ _get_site_id_and_values
     if not keys:
       keys = site.properties().keys()
     elif 'id' in keys:
@@ -170,7 +182,7 @@ class RPCMethods:
       if value is None:
         value = ""
       else:
-        value = str(value)
+        value = self._ToString(value)
       properties[key] = value
     
     return properties
@@ -203,7 +215,7 @@ class RPCMethods:
     #logging.info('got:%r' % repr(response))
     return response
 
-  def add_site(self, name, latlng, *args, **kwds):
+  def add_site(self, name, latlng, props=None):
     """
     requires:user
     """
@@ -217,6 +229,35 @@ class RPCMethods:
       userCreator=user,
       )
     site.put()
+    
+    return self.update_site(site.key().id(), props)
+
+  def update_site(self, id, props):
+    """
+    requires:user == creator, admin, or contact
+    """
+    id = int(id)
+    site = Site.get_by_id(id)
+    if not site:
+      raise self.NotFound
+    
+    if not self._is_creator_admin_or_contact(site):
+      raise self.AccessDenied
+    
+    if isinstance(props, dict):
+      logging.debug('props = %r' % repr(props))
+      # iterate through only existing non-underscored properties
+      for key in site.properties().iterkeys():
+        if key[0] != '_' and key in props.keys():
+          value = props[key]
+          if isinstance(value, basestring):
+            value = value.strip('\n ,')
+          attr = getattr(site, key)
+          if isinstance(attr, db.GeoPt):
+            value=self._to_latlng(value)
+          logging.debug('Setting site.%s=%s' % (key, repr(value)))
+          setattr(site, key, value)
+      site.put()
     
     return self._get_site_id_and_properties(site)
     
@@ -245,6 +286,7 @@ class RPCMethods:
     """
     requires:anonmymous or user
     """
+    id = int(id)
     site = Site.get_by_id(id)
     if not site:
       raise self.NotFound
@@ -254,34 +296,12 @@ class RPCMethods:
     site.put()
     
     return self._get_site_id_and_properties(site)
-
-  def update_site(self, id, props):
-    """
-    requires:user == creator, admin, or contact
-    """
-    site = Site.get_by_id(id)
-    if not site:
-      raise self.NotFound
-    
-    if not self._is_creator_admin_or_contact(site):
-      raise self.AccessDenied
-    
-    # limits setattr to only non-underscored properties
-    for key in site.properties().iterkeys():
-      if key[0] != '_' and key in props.keys():
-        value = props[key]
-        prop = getattr(site, key)
-        if isinstance(prop, db.GeoPt):
-          value=self._to_latlng(value)
-        setattr(site, key, value)
-    site.put()
-    
-    return self._get_site_id_and_properties(site)
   
   def delete_site(self, id):
     """
     requires:user == creator, admin, or contact
     """
+    id = int(id)
     site = Site.get_by_id(id)
     if not site:
       raise self.NotFound
@@ -301,6 +321,7 @@ class RPCMethods:
     if not self._is_admin():
       raise self.AccessDenied
     
+    id = int(id)
     site = Site.get_by_id(id)
     if not site:
       raise self.NotFound
