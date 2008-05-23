@@ -79,7 +79,7 @@ SitesManager.prototype.isEditable = function(site){
   return (this.is_authenticated && 
    ((this.current_user.email == site.userCreator.email.toLowerCase()) ||
      this.is_admin ||
-     (this.current_user.email == site.contactUser.email.toLowerCase())));
+     ((site.contactUser) ? this.current_user.email == site.contactEmail.toLowerCase() : false)));
 }
 
 SitesManager.prototype.addMarker = function(id, marker){
@@ -283,13 +283,16 @@ SitesManager.prototype.createNewSite = function(){
 
 ChargeSite.prototype.getDetails = function(callback){
   if (this.newsite){
+  	var current_user = siteman.current_user;
 	  var json = {
 	  	id:this.id,
-	    userCreator:siteman.current_user,
+	    userCreator:current_user,
 	    name:'Please enter a name',
 	    address:'Please enter an address',
-	    phone:'Please enter a phone number',
-	    description:'Please enter a description'
+	    description:'Please enter a description',
+      contactName:current_user.nickname,
+      contactPhone:'Please enter a phone number',
+      contactEmail:current_user.email
 	  };
     DBG('New:'+JSON.stringify(json));
 	  callback(json);
@@ -316,59 +319,38 @@ ChargeSite.prototype.makeDetailsTab = function(details){
   dom.setAttribute('style', 'width:400px;');
 
   // TODO(pv): Would it be better/faster to DOM the below HTML?
-  var template = '<table width="100%;">' +
-			'  <tr id="propsHeader{0}">' +
-			'    <td><font size="5"><b>Site #{0}</b></font></td>' +
-			'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{2}</a></font></td>' +
-			'  </tr>' +
-			'  <tr>' +
-			'    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
-			'      <div id="divProps{0}" style="overflow:auto;">' +
-			'      <table border="1" width="100%">' +
-			'        <tr>' +
-			'          <td valign="top" align="right"><b>Name:</b></td>' +
-			'          <td valign="top" style="width:100%;"><span id="name{0}">{3}</span></td>' +
-			'        </tr>' +
-			'        <tr>' +
-			'          <td valign="top" align="right"><b>Address:</b></td>' +
-			'          <td valign="top"><span id="address{0}">{4}</span></td>' +
-			'        </tr>' +
-			'        <tr>' +
-			'          <td valign="top" align="right"><b>Phone:</b></td>' +
-			'          <td valign="top"><span id="phone{0}">{5}</span></td>' +
-			'        </tr>' +
-			'        <tr>' +
-			'          <td valign="top" align="right"><b>Description:</b></td>' +
-			'          <td valign="top"><span id="description{0}">{6}</span></td>' +
-			'        </tr>' +
-			'      </table>' +
-			'      </div>' +
-			'    </td>' +
-			'  </tr>' +
-			'  <tr id="propsFooter{0}">' +
-			'    <td colspan="2">' +
-			'      <table width="100%;">' +
-			'        <tr>' +
-			'          <td align="left">' +
-			'            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
-			'          </td>' +
-			'          <td align="right">' +
-			'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
-			'            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
-			'          </td>' +
-			'        </tr>' +
-			'      </table>' +
-			'    </td>' +
-			'  </tr>' +
-			'</table>';
-	dom.innerHTML = template.format(
-			      id,
-            escape(details.userCreator.email),   
-			      escape(details.userCreator.nickname),   
-			      textToHTML(details.name),
-			      textToHTML(details.address),
-			      textToHTML(details.phone),
-			      textToHTML(details.description));
+  var htmlTemplate = '' +
+    '<table width="100%;">' +
+		'  <tr id="propsHeader{0}">' +
+		'    <td><font size="5"><b>Site #{0}</b></font></td>' +
+		'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{2}</a></font></td>' +
+		'  </tr>' +
+		'  <tr>' +
+		'    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
+		'      <div id="divProps{0}" style="overflow:auto;">{3}</div>' +
+		'    </td>' +
+		'  </tr>' +
+		'  <tr id="propsFooter{0}">' +
+		'    <td colspan="2">' +
+		'      <table width="100%;">' +
+		'        <tr>' +
+		'          <td align="left">' +
+		'            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
+		'          </td>' +
+		'          <td align="right">' +
+		'            <input id="btnOne{0}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
+		'            <input id="btnTwo{0}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
+		'          </td>' +
+		'        </tr>' +
+		'      </table>' +
+		'    </td>' +
+		'  </tr>' +
+		'</table>';
+		
+	dom.innerHTML = htmlTemplate.format(id,
+													            escape(details.userCreator.email),   
+																      escape(details.userCreator.nickname),
+																      this.htmlDetails(details));
   return dom;
 }
 
@@ -437,10 +419,134 @@ ChargeSite.prototype.makeStreetViewTab = function(details){
   
 }
 
+ChargeSite.prototype.htmlDetails = function(details){
+  var html = '' +
+    '<table border="1" width="100%">' +
+    '  <tr>' +
+    '    <td valign="top" align="right"><b>Name:</b></td>' +
+    '    <td valign="top" style="width:100%;"><span id="name{0}">{1}</span></td>' +
+    '  </tr>' +
+    '  <tr>' +
+    '    <td valign="top" align="right"><b>Address:</b></td>' +
+    '    <td valign="top"><span id="address{0}">{2}</span></td>' +
+    '  </tr>' +
+    '  <tr>' +
+    '    <td valign="top" align="right"><b>Description:</b></td>' +
+    '    <td valign="top"><span id="description{0}">{3}</span></td>' +
+    '  </tr>' +
+    //'  <tr>' +
+    //'    <td colspan="2">Outlets: TODO(pv)</td>' + 
+    //'  </tr>' +
+    '  <tr>' +
+    '    <td colspan="2"><b>Contact:</b>' +
+    '      <table border="1" width="100%">' +
+    '        <tr>' +
+    '          <td valign="top" align="right"><b>Name:</b></td>' +
+    '          <td valign="top" style="width:100%;"><span id="contactName{0}">{4}</span></td>' +
+    '        </tr>' +
+    //'        <tr>' +
+    //'          <td valign="top" align="right"><b>Address:</b></td>' +
+    //'          <td valign="top"><span id="contactAddress{0}">{?}</span></td>' +
+    //'        </tr>' +
+    '        <tr>' +
+    '          <td valign="top" align="right"><b>Phone:</b></td>' +
+    '          <td valign="top"><span id="contactPhone{0}">{5}</span></td>' +
+    '        </tr>' +
+    '        <tr>' +
+    '          <td valign="top" align="right"><b>Email:</b></td>' +
+    '          <td valign="top"><span id="contactEmail{0}">{6}</span></td>' +
+    '        </tr>' +
+    //'        <tr>' +
+    //'          <td valign="top" align="right"><b>IM:</b></td>' +
+    //'          <td valign="top"><span id="contactIM{0}">{?}</span></td>' +
+    //'        </tr>' +
+    //'        <tr>' +
+    //'          <td valign="top" align="right"><b>URL:</b></td>' +
+    //'          <td valign="top"><span id="contactURL{0}">{?}</span></td>' +
+    //'        </tr>' +
+    '      </table>' + 
+    '    </td>' +
+    '  </tr>' +
+    //'  <tr>' +
+    //'    <td colspan="2">Rating: TODO(pv)</td>' + 
+    //'  </tr>' +
+    //'  <tr>' +
+    //'    <td colspan="2">Comment(s): TODO(pv)</td>' + 
+    //'  </tr>' +
+    '</table>';
+  return html.format(this.id,
+                     textToHTML(details.name),
+                     textToHTML(details.address),
+                     textToHTML(details.description),
+                     textToHTML(details.contactName),
+                     //textToHTML(details.contactAddress),
+                     textToHTML(details.contactPhone),
+                     textToHTML(details.contactEmail)
+                     //textToHTML(details.contactIM),
+                     //textToHTML(details.contactURL)
+                     );
+}
+
+
+ChargeSite.prototype.domTabTemplate = function(tabNum, details, innerHTML){
+	
+  var id = this.id;
+  // Sad that IE does not support E4X! :(
+  var dom = document.createElement('div');
+  dom.setAttribute('id', 'propsWrapper'+id+'_'+tabNum);
+  dom.setAttribute('style', 'width:400px;');
+
+  var htmlTemplate = '' +
+    '<table width="100%;">' +
+    '  <tr id="propsHeader{0}_{1}">' +
+    '    <td><font size="5"><b>Site #{0}</b></font></td>' +
+    '    <td align="right"><font size="2">Created by: <a href="mailto:{2}">{3}</a></font></td>' +
+    '  </tr>' +
+    '  <tr>' +
+    '    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
+    '      <div id="divProps{0}_{1}" style="overflow:auto;">{4}</div>' +
+    '    </td>' +
+    '  </tr>' +
+    '  <tr id="propsFooter{0}_{1}">' +
+    '    <td colspan="2">' +
+    '      <table width="100%;">' +
+    '        <tr>' +
+    '          <td align="left">' +
+    '            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
+    '          </td>' +
+    '          <td align="right">' +
+    '            <input id="btnOne{0}_{1}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
+    '            <input id="btnTwo{0}_{1}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
+    '          </td>' +
+    '        </tr>' +
+    '      </table>' +
+    '    </td>' +
+    '  </tr>' +
+    '</table>';
+    
+  dom.innerHTML = htmlTemplate.format(id,
+                                      tabNum,
+                                      escape(details.userCreator.email),   
+                                      escape(details.userCreator.nickname),
+                                      innerHTML);
+  return dom;
+}
+
 ChargeSite.prototype.openInfoWindow = function(details){
 
+  // TODO(pv): Can we use map.updateInfoWindow(tabs, onupdate)?
+  // TODO(pv): Can we use map.updateCurrentTab(function(tab){ /* GInfoWindowTab.content/label */}, onupdate)?
+  // events: infowindowopen, infowindowbeforeclose, infowindowclose
+  // GInfoWindow.reset(...), selectTab(#), getSelectedTab(), getTabs()
+  // marker.bindInfoWindowTabs
+  //var htmlDetails = this.htmlDetails(details);
+  //var domDetails = this.domTabTemplate(0, details, htmlDetails);
+  //var htmlStreetView = 'TODO(pv): htmlStreetView';
+  //var domStreetView = this.domTabTemplate(1, details, htmlStreetView);
+  
   var tabDetails = this.makeDetailsTab(details);
   var tabStreetView = this.makeStreetViewTab(details);
+  // TODO(pv): History Tab? (show modifications?  to who?)
   
   var opts = {
 //  	selectedTab: 1, // Possible we would prefer SV as selected tab?
@@ -496,15 +602,18 @@ ChargeSite.prototype.toggleEditMode = function(save){
 
   if (editing && save){
 
+    var json = {
+      address:$('editAddress').value,
+      description:$('editDescription').value,
+      contactPhone:$('editContactName').value,
+      contactPhone:$('editContactPhone').value,
+      contactPhone:$('editContactEmail').value
+    };
+
     if (this.newsite){
 
 	    var name = $('editName').value;
 	    var latlng = this.strLatLng();
-	    var json = {
-	      address:$('editAddress').value,
-	      phone:$('editPhone').value,
-	      description:$('editDescription').value
-	    };
 	    json = this.validateSite(json);
     	
       DBG('Adding #'+id+':'+JSON.stringify(json));
@@ -518,12 +627,7 @@ ChargeSite.prototype.toggleEditMode = function(save){
       
     } else {
     	
-	    var json = {
-	    	name:$('editName').value,
-	      address:$('editAddress').value,
-	      phone:$('editPhone').value,
-	      description:$('editDescription').value
-	    };
+	    json.name = $('editName').value;
     	json = this.validateSite(json);
     	
       DBG('Updating #'+id+':'+JSON.stringify(json));
@@ -572,20 +676,26 @@ ChargeSite.prototype.renderText = function(site, staticText){
 	
 	  $('name' + id).innerHTML = textToHTML(site.name);
 	  $('address' + id).innerHTML = textToHTML(site.address);
-	  $('phone' + id).innerHTML = textToHTML(site.phone);
 	  $('description' + id).innerHTML = textToHTML(site.description);
+    $('contactName' + id).innerHTML = textToHTML(site.contactName);
+    $('contactPhone' + id).innerHTML = textToHTML(site.contactPhone);
+    $('contactEmail' + id).innerHTML = textToHTML(site.contactEmail);
   } else {
   	var style = 'width:100%'; // TODO(pv): For long contiguous text, this wraps bad in IE
     $('name' + id).innerHTML = '<input type="text" style="'+style+'" id="editName" value="' + site.name + '"/>';
     $('address' + id).innerHTML = '<textarea style="'+style+'" rows="3" id="editAddress">' + site.address + '</textarea>';
-    $('phone' + id).innerHTML = '<input type="text" style="'+style+'" id="editPhone" value="' + site.phone + '"/>';
     $('description' + id).innerHTML = '<textarea style="'+style+'" rows="5" id="editDescription">' + site.description + '</textarea>';
+    $('contactName' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactName" value="' + site.contactName + '"/>';
+    $('contactPhone' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactPhone" value="' + site.contactPhone + '"/>';
+    $('contactEmail' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactEmail" value="' + site.contactEmail + '"/>';
         
     if (this.newsite){
     	this.selectEdit($('editName'));
       this.selectEdit($('editAddress'));
-      this.selectEdit($('editPhone'));
       this.selectEdit($('editDescription'));
+      this.selectEdit($('editContactName'));
+      this.selectEdit($('editContactPhone'));
+      this.selectEdit($('editContactEmail'));
     	
       btnOne.value = 'Delete';
       btnOne.onclick = function() { selectedSite.confirmDeleteSite(); };

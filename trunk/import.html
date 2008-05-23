@@ -323,29 +323,29 @@
               
               // Mostly from: http://javascript.about.com/library/blre.htm
               var rePhone = /((\+\d{1,3}[- \.]?\(?\d\)?[- \.]?\d{1,5})|(\(?\d{2,6}\)?))[- \.]?(\d{3,4})[- \.]?(\d{4})(( ?x| ?ext)\d{1,5}){0,1}/gi;
-              var phone = temp.match(rePhone);
-              if (phone){
+              var contactPhone = temp.match(rePhone);
+              if (contactPhone){
                 var i = 0;
-                if (phone.length > 1){
+                if (contactPhone.length > 1){
                   var txt = 'Found more than one phone # for site.';
-                  for(i=0; i<phone.length; i++){
-                    txt += '\n'+i+') "'+phone[i]+'"';
+                  for(i=0; i<contactPhone.length; i++){
+                    txt += '\n'+i+') "'+contactPhone[i]+'"';
                   }
                   txt += '\nWhich one do you want to use?';
                   var choice = prompt(txt, 0);
                   i = (choice) ? parseInt(choice) : 0;
                 }
-                phone = phone[i];
-                //alert('Found phone # "'+phone+'"');
+                contactPhone = contactPhone[i];
+                //alert('Found phone # "'+contactPhone+'"');
                 
-                description = description.replace(phone, '');
+                description = description.replace(contactPhone, '');
 
                 // TODO(pv): Fine tune the phone #? (for a consistent look)
-                //temp = phone.replace(/[^\d]*(?!(...
-                //var part = phone.match(/\d*...
+                //temp = contactPhone.replace(/[^\d]*(?!(...
+                //var part = contactPhone.match(/\d*...
 
               } else {
-                phone = '???-???-????';
+                contactPhone = '???-???-????';
                 //alert('Could not find phone # in:\n"'+temp+'"');
               }
               
@@ -353,7 +353,7 @@
                 name: name,
                 latlng: latlng,
                 address: address,
-                phone: phone,
+                contactPhone: contactPhone,
                 description: description
               };
 

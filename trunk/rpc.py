@@ -4,6 +4,7 @@ __author__ = 'Paul Peavyhouse'
 
 import os
 import logging
+import google.appengine.ext.db # Due to some bug w/ Model.gql...
 
 from datetime import datetime
 from django.utils import simplejson
@@ -94,17 +95,13 @@ class Site(db.Model):
   latlng = db.GeoPtProperty(required=True)
   address = db.PostalAddressProperty()
   description = db.TextProperty()
-  phone = db.PhoneNumberProperty()
-  email = db.EmailProperty()
-  URL = db.LinkProperty()
-  IM = db.IMProperty()
 
   #types = db.ListProperty() choices=set(["cat", "dog", "bird"]
   #db.BlobProperty() # images, etc
   #db.ListProperty() # images, history, ...
   # ReferenceProperty?
   
-  contactUser = db.UserProperty()
+  contactName = db.StringProperty()
   contactAddress = db.PostalAddressProperty()
   contactPhone = db.PhoneNumberProperty()
   contactEmail = db.EmailProperty()
@@ -147,7 +144,8 @@ class RPCMethods:
     return user and site.userCreator == user
 
   def _is_contact(self, site, user=users.get_current_user()):
-    return user and site.contactUser == user
+    return (user and site.contactEmail and 
+      site.contactEmail.lower() == user.email().lower())
   
   def _is_creator_admin_or_contact(self, site, user=users.get_current_user()):
     return (self._is_creator(site, user) or 
@@ -234,6 +232,8 @@ class RPCMethods:
       name=name,
       latlng=self._to_latlng(latlng),
       userCreator=user,
+      contactName=user.nickname(),
+      contactEmail=user.email(),
       )
     site.put()
     
@@ -274,7 +274,7 @@ class RPCMethods:
     """
 
     # limit output to only these values
-    columns = ['id','name','latlng','userCreator','contactUser',]#types
+    columns = ['id','name','latlng','userCreator','contactEmail',]#types
     
     sites = Site.gql('WHERE _deleted = FALSE ORDER BY _dateCreated')
     
@@ -321,22 +321,6 @@ class RPCMethods:
     
     return id
   
-  def obliterate_site(self, id):
-    """
-    requires:user == admin
-    """
-    if not self._is_admin():
-      raise self.AccessDenied
-    
-    id = int(id)
-    site = Site.get_by_id(id)
-    if not site:
-      raise self.NotFound
-    
-    site.delete()
-    
-    return id
-
 """
   # below: old sample code
   def GetLocations(self, user_email=None):
