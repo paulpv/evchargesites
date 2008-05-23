@@ -86,6 +86,14 @@ AdminControl.prototype.initialize = function(map) {
     document.location = "http://code.google.com/p/evchargesites/";
   });
   
+  var divBug = document.createElement("div");
+  this.setButtonStyle_(divBug);
+  container.appendChild(divBug);
+  divBug.appendChild(document.createTextNode("Report Bug"));
+  GEvent.addDomListener(divBug, "click", function() {
+    document.location = "http://code.google.com/p/evchargesites/issues/entry";
+  });
+
   if (this.url_admin){
     var divImport = document.createElement("div");
     this.setButtonStyle_(divImport);

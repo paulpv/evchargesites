@@ -13,8 +13,10 @@
   TODO:
     Support multiple phone numbers?
       Make sense of Creator vs. Contact info
+    Consolidate use of "site", "details", "props", "info", "json", etc...
     Ranking
     User/Anonymous comments
+    BUG: Closing New Site infowindow loses any entered content
     BUG: Cookie currently expires after one year; need better option
     Search code for "TODO" and make bugs
     
