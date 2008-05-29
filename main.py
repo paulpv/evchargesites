@@ -16,7 +16,7 @@ API_KEYS = {
   'localhost':'ABQIAAAA0lf9s5m2g3l_sMAsMUUB8xT2yXp_ZAY8_ufC3CFXhHIE1NvwkxTCcubIT5_F9VQlYSX6guPKOiC6dA',
   '127.0.0.1':'ABQIAAAA0lf9s5m2g3l_sMAsMUUB8xRi_j0U6kJrkFvY4-OX2XYmEAa76BTDvoB_Rt6S6xEivow6nooxId20Fw',
   }
-DEBUG = True
+DEBUG_CLIENT = True
   
 
 class MainPage(webapp.RequestHandler):
@@ -62,7 +62,7 @@ class MainPage(webapp.RequestHandler):
     request = self.request
     api_key = self.api_key()
     current_user = self.current_user()
-    debug_client = not self.is_production() # TODO(pv): or certain user(s)?
+    debug_client = DEBUG_CLIENT or not self.is_production() # TODO(pv): or certain user(s)?
     url_admin = self.url_admin()
     url_auth = self.url_auth()
 
@@ -86,7 +86,7 @@ class MainPage(webapp.RequestHandler):
 
 
 def main():
-  app = webapp.WSGIApplication([('/', MainPage)], debug=DEBUG)
+  app = webapp.WSGIApplication([('/', MainPage)], debug=True)
   util.run_wsgi_app(app)
 
 if __name__ == '__main__':
