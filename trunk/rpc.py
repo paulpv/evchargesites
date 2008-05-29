@@ -4,7 +4,7 @@ __author__ = 'Paul Peavyhouse'
 
 import os
 import logging
-import google.appengine.ext.db # Due to some bug w/ Model.gql...
+#import google.appengine.ext.db # Due to some bug w/ Model.gql?...
 
 from datetime import datetime
 from django.utils import simplejson
@@ -15,7 +15,7 @@ from google.appengine.ext.webapp import util
 
 
 class RPCHandler(webapp.RequestHandler):
-  
+
   def __init__(self):
     webapp.RequestHandler.__init__(self)
     self._methods = RPCMethods(self)
@@ -26,10 +26,11 @@ class RPCHandler(webapp.RequestHandler):
     else:
       self.error(500)
       self.response.out.write(exception)
-  
+
   def _rpc(self, func_name, *args):
   
-    logging.info('RPC: "%s", %r' % (func_name, repr(args)))
+    logging.debug('RPC: %s(%s)' % (func_name,
+                                  ','.join([repr(arg) for arg in args])))
   
     if not func_name or func_name[0] == '_':
       self.error(403) # access denied
@@ -41,9 +42,8 @@ class RPCHandler(webapp.RequestHandler):
       return
     
     result = func(*args)
-    
-    response = simplejson.dumps(result, skipkeys=True, separators=(',',':'))
-        
+    #logging.debug('result=%r' % repr(result))
+    response = simplejson.dumps(result, separators=(',',':'))
     self.response.out.write(response)
    
   def get(self):
@@ -208,16 +208,16 @@ class RPCMethods:
     
     url = str(url)
     response = None
-    #logging.info('fetching "%s"' % url)
+    #logging.debug('fetching "%s"' % url)
     from google.appengine.api import urlfetch
     response = urlfetch.fetch(url)
     response = dict(
         content=response.content,
         content_was_truncated=response.content_was_truncated,
-        headers=response.headers,
+        #headers=response.headers, # http://b/issue?id=1195299
         status_code=response.status_code,
       )
-    #logging.info('got:%r' % repr(response))
+    #logging.debug('got %r' % repr(response))
     return response
 
   def add_site(self, name, latlng, props=None):

@@ -290,7 +290,7 @@
               var latlng = '('+coords[1] + ',' + coords[0]+')';
               var description = placemark.description.toString();
 
-              // why is this stray 'Â' char in the kml?
+              // why are there non utf8 chars in the KML's "more>>" text?
               description = description.replace(/.Â»/g, '...');
                             
               //alert('before:'+description);

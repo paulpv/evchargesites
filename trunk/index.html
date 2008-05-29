@@ -96,52 +96,53 @@ function onLoad(){
 
   showLoading(true);
 
-	if (!GBrowserIsCompatible())
-	  return;
+  if (!GBrowserIsCompatible())
+	return;
 	  
-	var newUser = true;
+  var newUser = true;
 	
-	// === Look for the cookie ===
-	var cookie = document.cookie;
-	if (cookie.length > 0) {
-	  var cookieEnd, cookieStart = cookie.indexOf(cookiename + "=");
-	  if (cookieStart != -1) {
-	    newUser = false;
-	    DBG('cookie=' + cookie);
-	    cookieStart += cookiename.length + 1;
-	    cookieEnd = cookie.indexOf(";", cookieStart);
-	    if (cookieEnd == -1) {
-	      cookieEnd = cookie.length;
-	    }
-	    var txtAppOpts = cookie.substring(cookieStart, cookieEnd);
-	    DBG('cookie payload=' + txtAppOpts);
-	    appOpts = JSON.parse(txtAppOpts);
-	  }
-	}
-	DBG('appOpts=' + JSON.stringify(appOpts));
+  // === Look for the cookie ===
+  var cookie = document.cookie;
+  if (cookie.length > 0) {
+    var cookieEnd, cookieStart = cookie.indexOf(cookiename + "=");
+    if (cookieStart != -1) {
+      newUser = false;
+      DBG('cookie=' + cookie);
+      cookieStart += cookiename.length + 1;
+      cookieEnd = cookie.indexOf(";", cookieStart);
+      if (cookieEnd == -1) {
+        cookieEnd = cookie.length;
+      }
+      var txtAppOpts = cookie.substring(cookieStart, cookieEnd);
+      DBG('cookie payload=' + txtAppOpts);
+      appOpts = JSON.parse(txtAppOpts);
+    }
+  }
+  DBG('appOpts=' + JSON.stringify(appOpts));
 	
-	if (newUser){
-	  alert('TODO(pv): Welcome new user!');
-	}
+  if (newUser){
+    alert('TODO(pv): Welcome new user!');
+  }
 	
-	var googleBarOptions = {
-	  showOnLoad: true
-	};
-	var mapOpts = {
-	  mapTypes: G_DEFAULT_MAP_TYPES | G_PHYSICAL_MAP,
-	  googleBarOptions: googleBarOptions
-	};
-	map = new GMap2($("map"), mapOpts);
-	map.setCenter(new GLatLng(appOpts.lat, appOpts.lng), appOpts.zoom);
-	map.enableGoogleBar(); // TODO: Can this control be relocated?
+  var googleBarOptions = {
+    showOnLoad: true
+  };
+  var mapOpts = {
+    mapTypes: G_DEFAULT_MAP_TYPES | G_PHYSICAL_MAP,
+    googleBarOptions: googleBarOptions
+  };
+  map = new GMap2($("map"), mapOpts);
+  map.setCenter(new GLatLng(appOpts.lat, appOpts.lng), appOpts.zoom);
+  map.enableGoogleBar(); // TODO: Can this control be relocated?
 	 
-	var maptypes = map.getMapTypes();
-	for (var i=0; i < maptypes.length; i++) {
-	  if (i == appOpts.maptype){
-	    map.setMapType(maptypes[i]);
-	    break;              
-	  }
-	}
+  var maptypes = map.getMapTypes();
+  for (var i=0; i < maptypes.length; i++) {
+    if (i == appOpts.maptype){
+      map.setMapType(maptypes[i]);
+      break;              
+    }
+  }
+  //map.addMapType(G_SATELLITE_3D_MAP); // Soon...very soon [this will work as intended]!
 
   // This takes awhile to load, so have it happen async...
   siteman = new SitesManager(map, current_user, is_admin);

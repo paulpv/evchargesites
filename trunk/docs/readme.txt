@@ -10,6 +10,14 @@
     MapMundi.org/MapEcos.org:
       http://core.mapmundi.org/mapPortal.do?key=nXrOfnvmKdm7agntOkNlAF4q2bVpdEFfcHyau011kNkOIiHTOEq4G2JQTunSyArklStPVvOXSjGD69NaiQsLyI&color=blue
 
+  ISSUES:
+    latest GAE seems to not JSON.dumps urlfetch.fetch().response.headers
+    local dev_appserver cannot url_get NW Charge Sites
+      urlfetch.fetch returns content = "{errorText:\"Unable to contact server.\"}"; where does that come from?
+      This means that we cannot import data in to the dev_appserver
+      We can only use the production server to test w/?
+    ScaleControl does not repaint on [some?] zooms (only during drag)
+
   TODO:
     Support multiple phone numbers?
       Make sense of Creator vs. Contact info
@@ -19,9 +27,7 @@
     BUG: Closing New Site infowindow loses any entered content
     BUG: Cookie currently expires after one year; need better option
     Search code for "TODO" and make bugs
-    
-    Add "Report a bug"
-    
+
     Scrub all JS code and make variable & method/function names consistent
     
     Improve MapType options (topo, +/- SV overlay, traffic, etc...)
@@ -73,9 +79,6 @@
       Weight, wheels, V, A, rolling/aero resistance, details (austinev), etc... 
       Allow multiple Cars?
 
-  BUGS:
-    ScaleControl does not repaint on [some?] zooms (only during drag)
-    
   DONE/HISTORY:
     Authenticate: DONE(when moved to Google App Engine)
     Add Urchin & Adsense: DONE(when moved to Google App Engine)
