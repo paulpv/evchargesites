@@ -180,6 +180,8 @@ function ChargeSite(id, name, latlng, type, editable, newsite){
   this.editable = editable;
 
   this.createMarker(latlng);
+  
+  this.rectInfoWindow = {width:600, height:400};
     
   return this;
 }
@@ -230,6 +232,7 @@ ChargeSite.prototype.createMarker = function(latlng){
   GEvent.bind(this.marker, "dragstart", this, this.onDragStart);
   GEvent.bind(this.marker, "dragend", this, this.onDragEnd);
   GEvent.bind(this.marker, "click", this, this.onClick);
+  GEvent.bind(this.marker, "infowindowopen", this, this.onInfoWindowOpen);
   return this.marker;
 }
 
@@ -311,28 +314,32 @@ ChargeSite.prototype.onClick = function(){
   this.getDetails(bind(this, this.openInfoWindow));   
 }
 
-ChargeSite.prototype.makeDetailsTab = function(details){
+ChargeSite.prototype.makeDetailsDOM = function(details){
 	var id = this.id;
   // Sad that IE does not support E4X! :(
   var dom = document.createElement('div');
-  dom.setAttribute('id', 'propsWrapper'+id);
-  dom.setAttribute('style', 'width:400px;');
+  dom.setAttribute('id', 'divWrapper'+id);
+  dom.setAttribute('style',
+      'width:'+this.rectInfoWindow.width+'px;'+
+      'height:'+this.rectInfoWindow.height+'px;');
 
   // TODO(pv): Would it be better/faster to DOM the below HTML?
   var htmlTemplate = '' +
-    '<table width="100%;">' +
-		'  <tr id="propsHeader{0}">' +
+    '<table width="100%">' +
+		'  <tr id="rowHeader{0}">' +
 		'    <td><font size="5"><b>Site #{0}</b></font></td>' +
 		'    <td align="right"><font size="2">Created by: <a href="mailto:{1}">{2}</a></font></td>' +
 		'  </tr>' +
 		'  <tr>' +
-		'    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
-		'      <div id="divProps{0}" style="overflow:auto;">{3}</div>' +
+		'    <td colspan="2" valign="top" style="width:100%;height:100%;">' +
+		'      <div id="divDetails{0}" style="overflow-y:scroll;height:'+this.rectInfoWindow.height+'px;">' +
+		'        {3}' +
+		'      </div>' +
 		'    </td>' +
 		'  </tr>' +
-		'  <tr id="propsFooter{0}">' +
+		'  <tr id="rowFooter{0}">' +
 		'    <td colspan="2">' +
-		'      <table width="100%;">' +
+		'      <table width="100%">' +
 		'        <tr>' +
 		'          <td align="left">' +
 		'            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
@@ -354,11 +361,13 @@ ChargeSite.prototype.makeDetailsTab = function(details){
   return dom;
 }
 
-ChargeSite.prototype.makeStreetViewTab = function(details){
+ChargeSite.prototype.makeStreetViewDOM = function(details){
 	var id = this.id;
   var dom = document.createElement('div');
-  dom.setAttribute('id', 'streetView'+id);
-  dom.setAttribute('style', 'width:400px;');
+  dom.setAttribute('id', 'divStreetView'+id);
+  dom.setAttribute('style',
+      'width:'+this.rectInfoWindow.width+'px;'+
+      'height:'+this.rectInfoWindow.height+'px;');
   dom.innerHTML = '<table border="1" style="margin-left:auto;margin-right:auto;">'+
       '<tr><td valign="middle" align="center">' +
   		'TODO(pv): StreetView (if available)' +
@@ -386,8 +395,8 @@ ChargeSite.prototype.makeStreetViewTab = function(details){
   // TODO(pv): maxWidth seems to be capped ~700; find a way to increase
   var contentNode = document.createElement('div');
   contentNode.style.textAlign = 'center';
-  contentNode.style.width = '640px';
-  contentNode.style.height = '360px';
+  contentNode.style.width = this.rectInfoWindow.width + 'px';
+  contentNode.style.height = this.rectInfoWindow.height + 'px';
   contentNode.innerHTML = 'Loading panorama';
   
   var infoOpts = {
@@ -421,7 +430,7 @@ ChargeSite.prototype.makeStreetViewTab = function(details){
 
 ChargeSite.prototype.htmlDetails = function(details){
   var html = '' +
-    '<table border="1" width="100%">' +
+    '<table id="tblDetails{0}" border="1">' +
     '  <tr>' +
     '    <td valign="top" align="right"><b>Name:</b></td>' +
     '    <td valign="top" style="width:100%;"><span id="name{0}">{1}</span></td>' +
@@ -440,7 +449,7 @@ ChargeSite.prototype.htmlDetails = function(details){
     '  <tr>' +
     '    <td valign="top" align="right"><b>Contact:</b></td>' +
     '    <td valign="top">' +
-    '      <table border="1" width="100%">' +
+    '      <table border="1">' +
     '        <tr>' +
     '          <td valign="top" align="right"><b>Name:</b></td>' +
     '          <td valign="top" style="width:100%;"><span id="contactName{0}">{4}</span></td>' +
@@ -488,51 +497,6 @@ ChargeSite.prototype.htmlDetails = function(details){
                      );
 }
 
-
-ChargeSite.prototype.domTabTemplate = function(tabNum, details, innerHTML){
-	
-  var id = this.id;
-  // Sad that IE does not support E4X! :(
-  var dom = document.createElement('div');
-  dom.setAttribute('id', 'propsWrapper'+id+'_'+tabNum);
-  dom.setAttribute('style', 'width:400px;');
-
-  var htmlTemplate = '' +
-    '<table width="100%;">' +
-    '  <tr id="propsHeader{0}_{1}">' +
-    '    <td><font size="5"><b>Site #{0}</b></font></td>' +
-    '    <td align="right"><font size="2">Created by: <a href="mailto:{2}">{3}</a></font></td>' +
-    '  </tr>' +
-    '  <tr>' +
-    '    <td colspan="2" style="height:100%;width:100%;" valign="top">' +
-    '      <div id="divProps{0}_{1}" style="overflow:auto;">{4}</div>' +
-    '    </td>' +
-    '  </tr>' +
-    '  <tr id="propsFooter{0}_{1}">' +
-    '    <td colspan="2">' +
-    '      <table width="100%;">' +
-    '        <tr>' +
-    '          <td align="left">' +
-    '            <input type="button" value="Close Up" onclick="selectedSite.showMapBlowup()"/>' +
-    '          </td>' +
-    '          <td align="right">' +
-    '            <input id="btnOne{0}_{1}" type="button" value="Edit" onclick="selectedSite.toggleEditMode(true)"/>' +
-    '            <input id="btnTwo{0}_{1}" type="button" value="Delete" onclick="selectedSite.confirmDeleteSite()"/>' +
-    '          </td>' +
-    '        </tr>' +
-    '      </table>' +
-    '    </td>' +
-    '  </tr>' +
-    '</table>';
-    
-  dom.innerHTML = htmlTemplate.format(id,
-                                      tabNum,
-                                      escape(details.userCreator.email),   
-                                      escape(details.userCreator.nickname),
-                                      innerHTML);
-  return dom;
-}
-
 ChargeSite.prototype.openInfoWindow = function(details){
 
   // TODO(pv): Can we use map.updateInfoWindow(tabs, onupdate)?
@@ -540,46 +504,67 @@ ChargeSite.prototype.openInfoWindow = function(details){
   // events: infowindowopen, infowindowbeforeclose, infowindowclose
   // GInfoWindow.reset(...), selectTab(#), getSelectedTab(), getTabs()
   // marker.bindInfoWindowTabs
-  //var htmlDetails = this.htmlDetails(details);
-  //var domDetails = this.domTabTemplate(0, details, htmlDetails);
-  //var htmlStreetView = 'TODO(pv): htmlStreetView';
-  //var domStreetView = this.domTabTemplate(1, details, htmlStreetView);
   
-  var tabDetails = this.makeDetailsTab(details);
-  var tabStreetView = this.makeStreetViewTab(details);
+  var domDetails = this.makeDetailsDOM(details);
+  var domStreetView = this.makeStreetViewDOM(details);
   // TODO(pv): History Tab? (show modifications?  to who?)
   
   var opts = {
 //  	selectedTab: 1, // Possible we would prefer SV as selected tab?
 //  	maxWidth:?, // map.clientWidth - some margin
 //  	maxTitle:?, //
-//  	maxContent:? // TODO(pv): Calculate (similar to tabDetails+tabStreetView)
+//  	maxContent:?, // TODO(pv): Calculate (similar to tabDetails+tabStreetView)
+//    onOpenFn: ?
   };
+  
   this.marker.openInfoWindowTabs([
-      new GInfoWindowTab('Details', tabDetails),
-      new GInfoWindowTab('Street View', tabStreetView)
+      new GInfoWindowTab('Details', domDetails),
+      new GInfoWindowTab('Street View', domStreetView)
       ],
       opts);
-  
+}
+
+ChargeSite.prototype.onInfoWindowOpen = function(){
+/*
+  map.updateCurrentTab(bind(this, function(tab){
+    alert('modify tab');
+    this.calcDetailsOverflow();
+  }), function(){
+    alert('onupdate');
+  })
+*/
   // Always do this (even if not edit mode)
   this.calcDetailsOverflow();
   
   if (this.newsite){
-  	this.toggleEditMode(false);
+    this.toggleEditMode(false);
   }
 }
 
 ChargeSite.prototype.calcDetailsOverflow = function(){
   var id = this.id;
-  var divWrapper = $('propsWrapper'+id);
-  var divHeader = $('propsHeader'+id);
-  var divFooter = $('propsFooter'+id);
-  var divProps = $('divProps'+id);
-  if (divWrapper && divHeader && divFooter && divProps) { 
+  var divWrapper = $('divWrapper'+id);
+  var divHeader = $('rowHeader'+id);
+  var divDetails = $('divDetails'+id);
+  var tblDetails = $('tblDetails'+id);
+  var divFooter = $('rowFooter'+id);
+  DBG(tblDetails.clientHeight);
+  if (divWrapper && divHeader && divDetails && tblDetails && divFooter) {
     var height = divWrapper.offsetHeight - divHeader.offsetHeight - divFooter.offsetHeight;
-    divProps.style.height = height + 'px';
-    //divProps.style.width = divWrapper.offsetWidth;
+    DBG(height);
+    divDetails.style.height = height + 'px';
+    //divDetails.style.width = divWrapper.clientWidth;
+  } else {
+    alert('ERROR: Failed to get all divs needed to calculate overflow!');
   }
+}
+
+ChargeSite.prototype.calcInputWidth = function(id){
+  var element = $(id);
+  var width = element.offsetParent.clientWidth - element.parentNode.offsetLeft;
+  DBG(width);
+  element.style.width = (width - 10) + 'px';
+  return element.style.width;
 }
 
 ChargeSite.prototype.validateSite = function(site){
@@ -682,11 +667,14 @@ ChargeSite.prototype.renderText = function(site, staticText){
     $('contactPhone' + id).innerHTML = textToHTML(site.contactPhone);
     $('contactEmail' + id).innerHTML = textToHTML(site.contactEmail);
   } else {
-  	var style = 'width:100%'; // TODO(pv): For long contiguous text, this wraps bad in IE
-    $('name' + id).innerHTML = '<input type="text" style="'+style+'" id="editName" value="' + site.name + '"/>';
-    $('address' + id).innerHTML = '<textarea style="'+style+'" rows="3" id="editAddress">' + site.address + '</textarea>';
-    $('description' + id).innerHTML = '<textarea style="'+style+'" rows="5" id="editDescription">' + site.description + '</textarea>';
-    $('contactName' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactName" value="' + site.contactName + '"/>';
+    $('name' + id).innerHTML = '<input type="text" id="editName" value="' + site.name + '"/>';
+    var width = this.calcInputWidth('editName');
+    var style = 'width:'+width+';';
+    $('address' + id).innerHTML = '<textarea rows="3" style="'+style+'" id="editAddress">' + site.address + '</textarea>';
+    $('description' + id).innerHTML = '<textarea rows="5" style="'+style+'" id="editDescription">' + site.description + '</textarea>';
+    $('contactName' + id).innerHTML = '<input type="text" id="editContactName" value="' + site.contactName + '"/>';
+    width = this.calcInputWidth('editContactName');
+    style = 'width:'+width+';';
     $('contactPhone' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactPhone" value="' + site.contactPhone + '"/>';
     $('contactEmail' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactEmail" value="' + site.contactEmail + '"/>';
         
