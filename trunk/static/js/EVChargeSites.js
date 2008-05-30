@@ -438,7 +438,8 @@ ChargeSite.prototype.htmlDetails = function(details){
     //'    <td colspan="2">Outlets: TODO(pv)</td>' + 
     //'  </tr>' +
     '  <tr>' +
-    '    <td colspan="2"><b>Contact:</b>' +
+    '    <td valign="top" align="right"><b>Contact:</b></td>' +
+    '    <td valign="top">' +
     '      <table border="1" width="100%">' +
     '        <tr>' +
     '          <td valign="top" align="right"><b>Name:</b></td>' +
