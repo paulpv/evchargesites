@@ -73,11 +73,28 @@ class RPCHandler(webapp.RequestHandler):
 
 class Rating(db.Model):
   """TODO(pv): Aggregated user ratings per site"""
-  pass
+  user = db.UserProperty()
+  rating = db.RatingProperty()
 
 class User(db.Model):
   """TODO(pv): A list of users that have...logged in?...created?...?"""
   pass
+
+class POV(db.Model):
+  yaw = db.FloatProperty()
+  pitch = db.FloatProperty()
+  roll = db.FloatProperty()
+  zoom = db.IntegerProperty()
+  
+
+ChargerTypes = dict(
+    avcon='AVCon',
+    spi='Small Paddle Inductive',
+    lpi='Large Paddle Inductive',
+    cond120='Conductive 110V-120V',
+    cond240='Conductive 208V-240V',
+    )
+    
 
 class Site(db.Model):
   
@@ -95,8 +112,17 @@ class Site(db.Model):
   latlng = db.GeoPtProperty(required=True)
   address = db.PostalAddressProperty()
   description = db.TextProperty()
+  
+  # from evchargermaps
+  status = db.StringProperty() # set?
+  action = db.StringProperty() # set?
+  pay = db.BooleanProperty(default=False)
+  restricted = db.BooleanProperty(default=False)
+  
+  # other ideas
+  breaker = db.BooleanProperty(default=False)
 
-  #types = db.ListProperty() choices=set(["cat", "dog", "bird"]
+  #types = db.ListProperty() choices=set(["cat", "dog", "bird"])
   #db.BlobProperty() # images, etc
   #db.ListProperty() # images, history, ...
   # ReferenceProperty?
@@ -198,6 +224,17 @@ class RPCMethods:
     latlng=latlng[1:-1].split(',')
     latlng = db.GeoPt(float(latlng[0]),float(latlng[1]))
     return latlng
+  
+  def _to_bool(selfself, val):
+    if isinstance(val, basestring):
+      val = val.lower()
+      if val in ('no', 'false', '0'):
+        val = False
+      elif val in ('yes', 'true', '1'):
+        val = True
+    else:
+      val = bool(val)
+    return val
 
   def get_url(self, url):
     """
@@ -206,25 +243,33 @@ class RPCMethods:
     if not self._is_admin():
       raise self.AccessDenied
     
-    url = str(url)
-    response = None
-    #logging.debug('fetching "%s"' % url)
-    from google.appengine.api import urlfetch
-    response = urlfetch.fetch(url)
-    response = dict(
-        content=response.content,
-        content_was_truncated=response.content_was_truncated,
-        #headers=response.headers, # http://b/issue?id=1195299
-        status_code=response.status_code,
-      )
+    if False:
+      url = str(url)
+      response = None
+      #logging.debug('fetching "%s"' % url)
+      from google.appengine.api import urlfetch
+      response = urlfetch.fetch(url)
+      response = dict(
+          content=response.content,
+          content_was_truncated=response.content_was_truncated,
+          #headers=response.headers, # http://b/issue?id=1195299
+          status_code=response.status_code,
+        )
+    else:
+      import evchargermap
+      response = dict(
+          content=evchargermap.evchargermap,
+          content_was_truncated=False,
+          #headers=response.headers, # http://b/issue?id=1195299
+          status_code=200,
+        )
     #logging.debug('got %r' % repr(response))
     return response
 
-  def add_site(self, name, latlng, props=None):
+  def add_site(self, name, latlng, props=None, user=users.get_current_user()):
     """
     requires:user
     """
-    user = users.get_current_user()
     if not user:
       raise self.AccessDenied
     
@@ -238,6 +283,15 @@ class RPCMethods:
     site.put()
     
     return self.update_site(site.key().id(), props)
+
+  def add_sites(self, sites):
+    """
+    requires:user (checked in add_site)
+    """
+    user = users.get_current_user()
+    for site in sites:
+      self.add_site(site['name'], site['latlng'], site['props'], user)
+    return len(sites)
 
   def update_site(self, id, props):
     """
@@ -257,11 +311,19 @@ class RPCMethods:
       for key in site.properties().iterkeys():
         if key[0] != '_' and key in props.keys():
           value = props[key]
+          
           if isinstance(value, basestring):
             value = value.strip('\n ,')
+
           attr = getattr(site, key)
+          
+          # TODO(pv): Lambda this
           if isinstance(attr, db.GeoPt):
             value=self._to_latlng(value)
+          elif isinstance(attr, bool):
+            value=self._to_bool(value)
+          #elif isinstance(attr, list/dict/type): # type...
+          
           logging.debug('Setting site.%s=%s' % (key, repr(value)))
           setattr(site, key, value)
       site.put()

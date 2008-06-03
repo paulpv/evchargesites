@@ -161,7 +161,6 @@
 
     function importData(btnId, url, callbackForEach){
       
-      
       if (confirm('Fetch the following URL?\n\n' + url)) {
       
         var btn = $(btnId);
@@ -190,8 +189,11 @@
             'The import *WILL* result in duplicates of any previously imported data!\n\n' +
             'NOTE: THIS MAY TAKE SEVERAL MINUTES TO COMPLETE!\n\n' +
             'Are you sure you want to proceed w/ the import?';
- 	          if (confirm(txt)) {
+
+ 	        if (confirm(txt)) {
+ 	          
               showProgress(true);
+
               callbackForEach(xml, function(props){
                 var name = props.name;
                 var latlng = props.latlng;
@@ -201,16 +203,18 @@
                   // onSuccess
                 }, function(){
                   // onError
-                  alert('ERROR: AddSite');
+                  alert('ERROR: AddSite "'+name+'"');
                 });
               }, function(){
                 btn.disabled = false;
                 renderSiteList();              
               });
+
             } else {
+
               btn.disabled = false;
             }
-	        }
+          }
         }, function(){
           btn.disabled = false;
           alert('ERROR: GetURL');
@@ -234,47 +238,60 @@
           function(xml, callbackForEach, callbackComplete){
 
             var TechList = {
-              "spi": "SPI",
               "avc": "Avcon",
-              "othercond": "Other",
-              "lpi": "LPI"
+              "spi": "SPI",
+              "lpi": "LPI",
+              "othercond": "Other"
             };
             
             for each (var site in xml.site){
-            
+
               var types = {};
               for (var key in TechList) {
                 var techName = TechList[key];
+                
                 var techNode = site[key];
-                for (var j = 0; j < techNode.length; j++) {
-                  var techNodeInfo = techNode[j];
-                  // we expect either zero or one elements in list
-                  var techInfo = {
-                    number: parseInt(techNodeInfo.@number.toString() || 0),
-                    up: parseInt(techNodeInfo.@up.toString() || 0),
-                    down: parseInt(techNodeInfo.@down.toString() || 0),
-                    marginal: parseInt(techNodeInfo.@marginal.toString() || 0)
-                  };
-                  techInfo['unknown'] = Math.min(0, techInfo.number - techInfo.up - techInfo.down - techInfo.marginal);
-                  types[techName] = techInfo;
-                }
+                var techInfo = {
+                  number: parseInt(techNode.@number.toString() || 0),
+                  up: parseInt(techNode.@up.toString() || 0),
+                  down: parseInt(techNode.@down.toString() || 0),
+                  marginal: parseInt(techNode.@marginal.toString() || 0)
+                };
+                techInfo.unknown = Math.max(0, techInfo.number - (techInfo.up + techInfo.down + techInfo.marginal));
+                types[techName] = techInfo;
               }
               
+              var name = site.name.toString();
+              name = name.replace('\n','');
+              
+              // Weird structure for text:
+              // region, city[, state]
+              // Remove region
+              // If state is missing, default to CA
+              var cityState = site.city.toString().split(',');
+              if (cityState.length == 2){
+                cityState.push('CA');
+              }
+              cityState = cityState.slice(1).join(', foo');
+              
               var props = {
-                name:site.id.toString(),
-                address:site.address.toString() + " \n" + site.city.toString(),
-                description:site.name.toString(),
-                latlng:'('+site.latlng.toString()+')',
-                restricted: site.restricted.toString(),
+                name: name + ' ('+site.id.toString() + ')',
+                latlng: '(' + site.latlng.toString() + ')',
+                address: site.address.toString() + " \n" + cityState,
+                description: 'types=' + JSON.stringify(types),
                 status: site.status.toString(), // Up, Down, Marginal?
+                action: site.action.toString(),
                 pay: site.pay.toString(),
+                restricted: site.restricted.toString(),
                 types: types,
-                comments: "TODO(pv): Implement comments"
+                comments: "TODO(pv): Import comments"
               };
               
               callbackForEach(props);
             }
+            
             callbackComplete();
+            
           });
     }
         
