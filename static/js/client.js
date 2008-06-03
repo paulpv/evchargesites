@@ -18,6 +18,7 @@ InstallFunction(server, "POST", "get_url", "GetUrl");
 InstallFunction(server, "GET", "get_sites", "GetSites");
 InstallFunction(server, "GET", "get_site", "GetSite");
 InstallFunction(server, "POST", "add_site", "AddSite");
+InstallFunction(server, "POST", "add_sites", "AddSites");
 InstallFunction(server, "POST", "update_site", "UpdateSite");
 InstallFunction(server, "POST", "delete_site", "DeleteSite");
 InstallFunction(server, "POST", "obliterate_site", "ObliterateSite");
@@ -124,22 +125,23 @@ function RPC(options) {
   
   if (async) {
     req.onreadystatechange = function() {
-      if (4 == req.readyState){      
-
-	      var response = null;
-	      try { 
-	       response = JSON.parse(req.responseText);
-	      } catch (e) {
-	       response = req.responseText;
-	      }
-
-	      if (200 == req.status && options.onSuccess){
-	        options.onSuccess(response);
+      if (4 == req.readyState && req.status){
+              
+        var response = null;
+        try { 
+         response = JSON.parse(req.responseText);
+        } catch (e) {
+         response = req.responseText;
+        }
+        
+        if (200 == req.status && options.onSuccess){
+  	        options.onSuccess(response);
 	      } else {
 //          if (DEBUG)
 //            alert('onFail:'+response);
-          if (options.onFail)
+          if (options.onFail){
             options.onFail(response);
+          }
 	      }
       }
     }
