@@ -244,6 +244,8 @@
               "othercond": "Other"
             };
             
+            var regions = [];
+            
             for each (var site in xml.site){
 
               var types = {};
@@ -261,23 +263,78 @@
                 types[techName] = techInfo;
               }
               
-              var name = site.name.toString();
+              var name = site.name.toString() + ' ('+site.id.toString() + ')';
               name = name.replace('\n','');
               
               // Weird structure for text:
               // region, city[, state]
-              // Remove region
-              // If state is missing, default to CA
-              var cityState = site.city.toString().split(',');
-              if (cityState.length == 2){
-                cityState.push('CA');
+              var cityStateCountry;
+              var regionCityState = site.city.toString();
+              var matches = regionCityState.match(/^(.*?),(.*?)(?:,(.*?))?$/);
+              if (matches){
+              
+                //alert(matches.toSource());
+                
+                var region = matches[1].trim();
+                var city = matches[2].trim();
+                var state = matches[3].trim(); // TODO(pv): Will index 3 always exist?
+                var country = 'USA';
+                
+                switch (region.toLowerCase()){
+                
+                  case 'aos':{
+	                switch (state.toUpperCase()){
+	                  case '':
+	                    state = 'CA';
+	                    break;
+	                  case 'FR':
+	                    state = null;
+	                    country = 'France';
+	                    break;
+	                }
+                    break;
+                  }
+                  
+                  case 'ga':{
+                    state = 'GA';
+                    break;
+                  }
+                  
+                  // TODO(pv): Add more region handlers here as needed
+                  
+                  default:{
+                    // region: bay, la, oc, sac, sba, sbo, sd, ven, ...
+                     
+                    // If the state is missing, default to 'CA'
+                    state = 'CA';
+                    
+                    // Remove some stray descriptions from city names
+                    city = city.replace(' - Airport','');
+                    city = city.replace(' - Downtown','');
+                    city = city.replace(' - other','');
+                  }                                      
+                }
+                
+                if (state){
+                  cityStateCountry = city+', '+state+', '+country;
+                } else {
+                  cityStateCountry = city+', '+country;
+                } 
+                
+                //alert('"'+cityStateCountry+'"');
+                
+                if (!regions.contains(region))
+                  regions.push(region);
+                
+              } else {
+                alert('ERROR: site("'+name+'").city did not match "region, city[, state]"');
+                break;
               }
-              cityState = cityState.slice(1).join(', foo');
               
               var props = {
-                name: name + ' ('+site.id.toString() + ')',
+                name: name,
                 latlng: '(' + site.latlng.toString() + ')',
-                address: site.address.toString() + " \n" + cityState,
+                address: site.address.toString() + " \n" + cityStateCountry,
                 description: 'types=' + JSON.stringify(types),
                 status: site.status.toString(), // Up, Down, Marginal?
                 action: site.action.toString(),
@@ -291,6 +348,8 @@
             }
             
             callbackComplete();
+            
+            //alert(regions);
             
           });
     }

@@ -7,6 +7,33 @@ function DBG(text){
       alert(text);
 }
 
+
+String.prototype.format = function(){
+  var str = this;
+  for(var i=0;i<arguments.length;i++){
+    var re = new RegExp('\\{' + (i) + '\\}','gm');
+    str = str.replace(re, arguments[i]);
+  }
+  return str;
+}
+
+String.prototype.trim = function(){
+    return this.replace(/^\s*/, '').replace(/\s*$/, '');
+}
+
+
+Array.prototype.indexOf = function(item){
+  for(var i=0; i<this.length; i++){
+    if (this[i]==item) return i;
+  }
+  return -1;  
+}
+
+Array.prototype.contains = function(item){
+  return this.indexOf(item) != -1;
+}
+
+
 // For callback objects to bind a method to themself
 function bind(obj, func){
   return function(){
@@ -15,10 +42,12 @@ function bind(obj, func){
   }
 }
 
+
 // Easy access to a named element in the DOM
 function $(id) {
   return document.getElementById(id);
 }
+
 
 function showElement(element, show){
   if (element && element.style){
@@ -30,22 +59,9 @@ function showElement(element, show){
   }
 }
 
+
 function showId(id, show){
   showElement($(id), show);
-}
-
-
-//
-// Weak, but useful, form of String formatting:
-//   http://community.hdri.net/blogs/ray_blog/archive/2006/02/27/5.aspx
-//
-String.prototype.format = function(){
-  var str = this;
-  for(var i=0;i<arguments.length;i++){
-    var re = new RegExp('\\{' + (i) + '\\}','gm');
-    str = str.replace(re, arguments[i]);
-  }
-  return str;
 }
 
 
