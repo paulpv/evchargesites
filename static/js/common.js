@@ -21,6 +21,19 @@ String.prototype.trim = function(){
     return this.replace(/^\s*/, '').replace(/\s*$/, '');
 }
 
+String.prototype.capitalize = function(camelCase){
+    if (camelCase == null){
+      camelCase = true;
+    }
+    return this.replace(/\w+/g, function(str){
+      var suffix = str.substr(1);
+      if (camelCase){
+        suffix = suffix.toLowerCase();
+      }
+      return str.charAt(0).toUpperCase() + suffix;
+    });
+}
+
 
 Array.prototype.indexOf = function(item){
   for(var i=0; i<this.length; i++){

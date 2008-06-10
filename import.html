@@ -38,18 +38,18 @@
       }
       
       var table = <table id='tableSites' width='100%' border='1' cellpadding='0' cellspacing='0'><tr/></table>;
-      for each(var col in cols){
-        table.tr.td += <td align='center'>{col}</td>;
+      for (i=0; i<cols.length; i++){
+        table.tr.td += <td align='center'>{cols[i]}</td>;
       }
       table.tr.td += <td align='center'>Commands</td>;
 
       var tr;
-      for each (var row in rows){
-        var site = row;
+      for (i=0; i<rows.length; i++){
+        var site = rows[i];
         var key;       
-        for(i=0; i<cols.length; i++){
-          var val = site[i]
-          if (i==0){
+        for(var j=0; j<cols.length; j++){
+          var val = site[j]
+          if (j==0){
             key = val;          
             tr = <tr id={'row'+key}/>;
             tr.td += <td align='right' nowrap='true' width='1%'>
@@ -335,8 +335,8 @@
                 name: name,
                 latlng: '(' + site.latlng.toString() + ')',
                 address: site.address.toString() + " \n" + cityStateCountry,
-                description: 'types=' + JSON.stringify(types),
-                status: site.status.toString(), // Up, Down, Marginal?
+                description: '',
+                status: site.status.toString(), // Up, Down, Marginal, ...
                 action: site.action.toString(),
                 pay: site.pay.toString(),
                 restricted: site.restricted.toString(),

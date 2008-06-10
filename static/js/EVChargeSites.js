@@ -2,6 +2,15 @@
 // @author Paul Peavyhouse (pv@swooby.com)
 //
 
+// HARD CODED FOR DEBUGGING; remove when no longer needed
+var DEBUG_SERVICES = [
+    new ChargeService('avcon','working','30A',false),
+    new ChargeService('avcon','marginal','30A',false),
+    new ChargeService('spi','not working','40A',true),
+    new ChargeService('cond120','not working','15A',true),
+    new ChargeService('cond240','unknown','?',false)
+    ];
+
 // Pointer to the one and only marker that we can edit at a time
 var selectedSite = null;
 
@@ -72,6 +81,38 @@ function SitesManager(map, current_user, is_admin){
 	this.is_admin = is_admin;
   this.dictMarkers = {};
   this.cluster = new ClusterMarker(map, {clusterMarkerIcon:this.getClusterMarkerIcon()});
+  server.GetServiceDescriptors(bind(this, function(serviceDescriptors){
+    
+      var serviceTypes = serviceDescriptors.types;
+      this.serviceTypes = {};
+      var htmlTypes = '<select id="edit{0}">\n';
+      for (var i=0; i<serviceTypes.length; i++){
+        var value = serviceTypes[i][0];
+        var display = serviceTypes[i][1];
+        this.serviceTypes[value] = display;
+        htmlTypes += '<option value="'+value+'">'+display+'</option>\n';
+      }
+      htmlTypes += '</select>\n';
+  
+      var htmlConditions = '<select id="edit{0}">\n';
+      for(i=0; i<serviceDescriptors.conditions.length; i++){
+        htmlConditions += '<option>'+serviceDescriptors.conditions[i].capitalize()+'</option>\n';
+      }
+      htmlConditions += '</select>\n';
+  
+      var htmlBreakers = '<select id="edit{0}">\n';
+      for(i=0; i<serviceDescriptors.breakers.length; i++){
+        htmlBreakers += '<option>'+serviceDescriptors.breakers[i]+'</option>\n';
+      }
+      htmlBreakers += '</select>\n';
+  
+      this.htmlServiceDescriptors = {
+        types:htmlTypes,
+        conditions:htmlConditions,
+        breakers:htmlBreakers
+      };
+
+    }));
   return this;
 }
 
@@ -109,18 +150,12 @@ SitesManager.prototype.getClusterMarkerIcon = function(){
 }
 
 SitesManager.prototype.updateSite = function(site){
-  // Marker clustering does not [currently?] allow updating a single marker
-  // For now we have to clear markers and then rebuild them
-  // This may not be too bad, since Clustering is pretty fast, and we are only changing one.
-  this.loadMarkers(bind(site,site.onClick));
+  // ClusterMarker does not [currently?] allow updating a single marker.
+  // For now we have to clear *all* markers and then re-load *all* markers.
+  // This may not be too bad, since Clustering seems to be pretty fast.
+  this.loadMarkers(bind(site, site.onClick));
   
-  
-  // Another alternative is to forego this and just add the marker outside of clustering.
-  // This seems reasonable considering that the marker was of interest to the user enough for them to update it.
-  // So, it is reasonable to presume that the user might not mind or even notice that the marker stands outside of the cluster.
-  // When the user refreshes the page the cluster will re-group.
-  // The problem w/ this is that we still need to remove the old marker from the cluster, and since there is [currently] no way
-  // to do this, we are back to needing this function.
+  // TODO(pv): Revisit this if ClusterMarker ever allows removing a single marker  
 }
 
 SitesManager.prototype.redrawMarkers = function(){
@@ -167,6 +202,16 @@ SitesManager.prototype.loadMarkers = function(callbackSuccess, callbackFail){
 }
 
 
+// TODO(pv): Verify that values are in expected range(s)
+function ChargeService(type, condition, breaker, breakerAccessible){
+  this.type = type; // 'avcon', 'spi', 'lpi', 'cond120', 'cond240', ...
+  this.condition = condition; // 'working', 'not working', 'marginal', 'unknown'
+  this.breaker = breaker; // '?', '15A', '20A', ..., '100A', ...
+  this.breakerAccessible = breakerAccessible; // true | false
+  return this;
+}
+
+
 function ChargeSite(id, name, latlng, type, editable, newsite){
 	if (!newsite){
 		newsite = false;
@@ -181,7 +226,7 @@ function ChargeSite(id, name, latlng, type, editable, newsite){
 
   this.createMarker(latlng);
   
-  this.rectInfoWindow = {width:600, height:400};
+  this.rectInfoWindow = {width:550, height:425};
     
   return this;
 }
@@ -428,6 +473,46 @@ ChargeSite.prototype.makeStreetViewDOM = function(details){
   
 }
 
+ChargeSite.prototype.htmlServices = function(details){
+  
+  // HARD CODED FOR DEBUGGING; remove when no longer needed
+  details.types = DEBUG_SERVICES;
+
+  var id = this.id;
+
+  var htmlRows = '' +
+    '<tr>' +
+    '  <th>#</th>' +
+    '  <th>Type</th>' +
+    '  <th>Condition</th>' +
+    '  <th>Breaker</th>' +
+    '</tr>';
+  for (var i=0; i<details.types.length; i++){
+    var service = details.types[i];
+    var htmlRow = '' +
+    '<tr>' +
+    '<td>{2}</td>' +
+    '<td><span id="serviceType{0}_{1}">{3}</span></td>' +
+    '<td><span id="serviceCondition{0}_{1}">{4}</span></td>' +
+    '<td nowrap="true"><span id="serviceBreaker{0}_{1}">{5}</span>' +
+    '<span id="serviceBreakerAccessible{0}_{1}">{6}</span>' +
+    '<span id="serviceDelete{0}_{1}" style="display:none;"><input type="button" value="X" onclick="alert(\'TODO(pv): Delete this row...\');"/></span>'
+    '</td>' +
+    '</tr>';
+    htmlRows += htmlRow.format(id,
+        i,
+        i+1,
+        siteman.serviceTypes[service.type],
+        service.condition.capitalize(),
+        service.breaker,
+        (service.breakerAccessible) ? '*' : '');
+  }
+  return '<table border="1" width="100%">' + 
+    htmlRows + 
+    '</table>' +
+    '<span style="font-size:xx-small;">* = Breaker is accessible</span>';  
+}
+
 ChargeSite.prototype.htmlDetails = function(details){
   var html = '' +
     '<table id="tblDetails{0}" border="1">' +
@@ -443,16 +528,17 @@ ChargeSite.prototype.htmlDetails = function(details){
     '    <td valign="top" align="right"><b>Description:</b></td>' +
     '    <td valign="top"><span id="description{0}">{3}</span></td>' +
     '  </tr>' +
-    //'  <tr>' +
-    //'    <td colspan="2">Outlets: TODO(pv)</td>' + 
-    //'  </tr>' +
+    '  <tr>' +
+    '    <td valign="top" align="right"<b>Services:</b>' + 
+    '    <td valign="top" align="right">{4}</td>' + 
+    '  </tr>' +
     '  <tr>' +
     '    <td valign="top" align="right"><b>Contact:</b></td>' +
     '    <td valign="top">' +
     '      <table border="1">' +
     '        <tr>' +
     '          <td valign="top" align="right"><b>Name:</b></td>' +
-    '          <td valign="top" style="width:100%;"><span id="contactName{0}">{4}</span></td>' +
+    '          <td valign="top" style="width:100%;"><span id="contactName{0}">{5}</span></td>' +
     '        </tr>' +
     //'        <tr>' +
     //'          <td valign="top" align="right"><b>Address:</b></td>' +
@@ -460,11 +546,11 @@ ChargeSite.prototype.htmlDetails = function(details){
     //'        </tr>' +
     '        <tr>' +
     '          <td valign="top" align="right"><b>Phone:</b></td>' +
-    '          <td valign="top"><span id="contactPhone{0}">{5}</span></td>' +
+    '          <td valign="top"><span id="contactPhone{0}">{6}</span></td>' +
     '        </tr>' +
     '        <tr>' +
     '          <td valign="top" align="right"><b>Email:</b></td>' +
-    '          <td valign="top"><span id="contactEmail{0}">{6}</span></td>' +
+    '          <td valign="top"><span id="contactEmail{0}">{7}</span></td>' +
     '        </tr>' +
     //'        <tr>' +
     //'          <td valign="top" align="right"><b>IM:</b></td>' +
@@ -488,6 +574,7 @@ ChargeSite.prototype.htmlDetails = function(details){
                      textToHTML(details.name),
                      textToHTML(details.address),
                      textToHTML(details.description),
+                     textToHTML(this.htmlServices(details)),
                      textToHTML(details.contactName),
                      //textToHTML(details.contactAddress),
                      textToHTML(details.contactPhone),
@@ -591,10 +678,13 @@ ChargeSite.prototype.toggleEditMode = function(save){
     var json = {
       address:$('editAddress').value,
       description:$('editDescription').value,
-      contactPhone:$('editContactName').value,
+      contactName:$('editContactName').value,
       contactPhone:$('editContactPhone').value,
-      contactPhone:$('editContactEmail').value
+      contactEmail:$('editContactEmail').value
     };
+    
+    // TODO(pv): Service Types
+    //...
 
     if (this.newsite){
 
@@ -648,36 +738,126 @@ ChargeSite.prototype.selectEdit = function(input){
   }
 }
 
+ChargeSite.prototype.htmlInputTextElement = function(id, value, width){
+  var style = (width) ? 'style="width:'+width+';"' : '';
+  return '<input type="text" '+style+' id="'+id+'" value="'+value+'"/>';
+}
+
+ChargeSite.prototype.htmlTextAreaElement = function(rows, id, value, width){
+  var style = (width) ? 'style="width:'+width+';"' : '';
+  return '<textarea rows="'+rows+'" '+style+' id="'+id+'">'+value+'</textarea>';
+}
+
+ChargeSite.prototype.htmlSelectOptionElement = function(id, options, selectedValue, width){
+  selectedValue = selectedValue.toString().toLowerCase();
+  var style = (width) ? 'style="width:'+width+';"' : '';
+  var html = '<select id="'+id+'" '+style+'>\n';
+  for (var key in options){
+    if (key.toLowerCase() == selectedValue){
+      html += '<option value="'+key+'" selected="true">'+options[key]+'</option>\n'; 
+    } else {
+      html += '<option value="'+key+'">'+options[key]+'</option>\n';
+    } 
+  }
+  return html;
+}
+
+ChargeSite.prototype.htmlInputCheckboxElement = function(id, checked){
+  return '<input type="checkbox" id="'+id+'" '+((checked)?'checked="on"':'')+'/>';
+}
+
+ChargeSite.prototype.selectOption = function(id, selectedValue){
+  var element = $(id);
+  selectedValue = selectedValue.toString().toLowerCase();
+  for (var i=0; i<element.length; i++){
+    var option = element.options[i]; 
+    if (option.value.toLowerCase() == selectedValue){
+      option.selected = true;
+      break;
+    }
+  }
+}
+
 ChargeSite.prototype.renderText = function(site, staticText){
 
   var id = site.id;
   var btnOne = $('btnOne'+id);
   var btnTwo = $('btnTwo'+id);
+
+  // FOR DEBUGGING ONLY! (Remove eventually)
+  site.types = DEBUG_SERVICES;
   
   if (staticText){
+    
 	  btnOne.value = 'Edit';
 	  btnOne.onclick = function() { selectedSite.toggleEditMode(true); };
 	  btnTwo.value = 'Delete';
 	  btnTwo.onclick = function() { selectedSite.confirmDeleteSite(); };
-	
+
+    // Render Basic Info
 	  $('name' + id).innerHTML = textToHTML(site.name);
 	  $('address' + id).innerHTML = textToHTML(site.address);
 	  $('description' + id).innerHTML = textToHTML(site.description);
+	  
+	  // Render Service Types
+    for (var i=0; i<site.types.length; i++){
+      var service = site.types[i];
+      $('serviceType'+id+'_'+i).innerHTML = siteman.serviceTypes[service.type];
+      $('serviceCondition'+id+'_'+i).innerHTML = service.condition.capitalize();
+      $('serviceBreaker'+id+'_'+i).innerHTML = service.breaker;
+      $('serviceBreakerAccessible'+id+'_'+i).innerHTML = (service.breakerAccessible) ? '*' : '';
+      $('serviceDelete'+id+'_'+i).style.display = 'none';
+    }
+	  
+	  // Render Contact Info	  
     $('contactName' + id).innerHTML = textToHTML(site.contactName);
     $('contactPhone' + id).innerHTML = textToHTML(site.contactPhone);
     $('contactEmail' + id).innerHTML = textToHTML(site.contactEmail);
+    
   } else {
-    $('name' + id).innerHTML = '<input type="text" id="editName" value="' + site.name + '"/>';
-    var width = this.calcInputWidth('editName');
-    var style = 'width:'+width+';';
-    $('address' + id).innerHTML = '<textarea rows="3" style="'+style+'" id="editAddress">' + site.address + '</textarea>';
-    $('description' + id).innerHTML = '<textarea rows="5" style="'+style+'" id="editDescription">' + site.description + '</textarea>';
-    $('contactName' + id).innerHTML = '<input type="text" id="editContactName" value="' + site.contactName + '"/>';
+
+    var width;
+
+    // Render Editable Basic Info
+    $('name' + id).innerHTML = this.htmlInputTextElement('editName', site.name);
+    width = this.calcInputWidth('editName');
+    $('address' + id).innerHTML = this.htmlTextAreaElement(3, 'editAddress', site.address, width);
+    $('description' + id).innerHTML = this.htmlTextAreaElement(5, 'editDescription', site.description, width);
+    $('contactName' + id).innerHTML = this.htmlInputTextElement('editContactName', site.contactName, width);
+
+    // Render Editable Service Types
+    for (var i=0; i<site.types.length; i++){
+      
+      var service = site.types[i];
+      
+      var name = 'serviceType'+id+'_'+i;
+      var capitalized = name.capitalize(false);            
+      $(name).innerHTML = siteman.htmlServiceDescriptors.types.format(capitalized);
+      this.selectOption('edit'+capitalized, service.type);
+  
+      var name = 'serviceCondition'+id+'_'+i;
+      var capitalized = name.capitalize(false);
+      $(name).innerHTML = siteman.htmlServiceDescriptors.conditions.format(capitalized);
+      this.selectOption('edit'+capitalized, service.condition);
+
+      var name = 'serviceBreaker'+id+'_'+i;
+      var capitalized = name.capitalize(false);
+      $(name).innerHTML = siteman.htmlServiceDescriptors.breakers.format(capitalized);
+      this.selectOption('edit'+capitalized, service.breaker);
+
+      var name = 'serviceBreakerAccessible'+id+'_'+i;
+      var capitalized = name.capitalize(false);
+      $(name).innerHTML = this.htmlInputCheckboxElement('edit'+capitalized, service.breakerAccessible);
+      
+      $('serviceDelete'+id+'_'+i).style.display = 'inline';
+    }
+    
+    // Render Editable Contact Info
     width = this.calcInputWidth('editContactName');
-    style = 'width:'+width+';';
-    $('contactPhone' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactPhone" value="' + site.contactPhone + '"/>';
-    $('contactEmail' + id).innerHTML = '<input type="text" style="'+style+'" id="editContactEmail" value="' + site.contactEmail + '"/>';
-        
+    $('contactPhone' + id).innerHTML = this.htmlInputTextElement('editContactPhone', site.contactPhone, width);
+    $('contactEmail' + id).innerHTML = this.htmlInputTextElement('editContactEmail', site.contactEmail, width);
+    
+    // Highlight newsite values to encourage changing defaults... 
     if (this.newsite){
     	this.selectEdit($('editName'));
       this.selectEdit($('editAddress'));
