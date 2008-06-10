@@ -4,7 +4,7 @@ __author__ = 'Paul Peavyhouse'
 
 import os
 import logging
-#import google.appengine.ext.db # Due to some bug w/ Model.gql?...
+import google.appengine.ext.db # Due to some bug w/ Model.gql?...
 
 from datetime import datetime
 from django.utils import simplejson
@@ -86,15 +86,60 @@ class POV(db.Model):
   roll = db.FloatProperty()
   zoom = db.IntegerProperty()
   
-
-ChargerTypes = dict(
-    avcon='AVCon',
-    spi='Small Paddle Inductive',
-    lpi='Large Paddle Inductive',
-    cond120='Conductive 110V-120V',
-    cond240='Conductive 208V-240V',
+# NOTE: Some items are intentionally *NOT* a dict, so as to maintain order
+ChargerServiceDescriptors = dict(
+    types=(
+           ('spi','Small Paddle Inductive'),
+           ('lpi','Large Paddle Inductive'),
+           ('avcon','AVCon'),
+           ('cond120','Conductive 110V-120V NEMA 5-15'),
+           ('cond240','Conductive 208V-240V NEMA 14-50'),
+           ),
+    conditions=('working','marginal','not working','unknown'),
+    breakers=('?','15A','20A','30A','40A','50A','60A','70A','80A','90A','100A'),
     )
-    
+
+ChargerAction = ['ok', 'new loc', 'down loc', 'prob loc', 'spi down', 'spi prob', 'unknown']
+# TODO(pv): Last Confirmed By
+
+NEMA_volts = {
+              2:115,
+              5:125,
+              6:250,
+              7:277,
+              8:480,
+              9:600,
+              14:(125,250),
+              15:250,
+              #16,17,21,22,23,...
+              }
+
+
+class NEMA(db.Model):
+  """A model representation of a typical NEMA outlet.
+  http://www.nema.org/stds/wd6.cfm#download
+    At end: "NEMA Configurations..."
+
+  See also:
+    http://en.wikipedia.org/wiki/NEMA_connector
+      http://www.nooutage.com/nema_configurations.htm
+      http://www.stayonline.com/reference-nema-straight-blade.aspx
+      http://www.stayonline.com/reference-nema-locking.aspx
+      http://www.powercabling.com/nema.htm
+      http://www.powercabling.com/hubbell/hubbell.htm
+      http://www.systemconnection.com/downloads/PDFs/power_cord_nema_mold_chart.pdf
+  
+  TODO(pv): Make this extensible for other configs (ex: European, Asian, etc...)
+  """
+  #voltage = db.IntegerProperty(required=True, choices=[120, 125, 208, 250, 277, 347, 480, 600])
+  #amperage = db.IntegerProperty(required=True, choices=[15, 20, 30, 50, 60])
+  #poles = db.IntegerProperty(choices)
+  #wires = 
+  #grounded = db.BooleanProperty(required=True)
+  #phase = db.IntegerPropterty(choices=[1, 3])
+  #socket = db.
+  pass
+
 
 class Site(db.Model):
   
@@ -114,8 +159,7 @@ class Site(db.Model):
   description = db.TextProperty()
   
   # from evchargermaps
-  status = db.StringProperty() # set?
-  action = db.StringProperty() # set?
+  action = db.StringProperty(choices=ChargerAction)
   pay = db.BooleanProperty(default=False)
   restricted = db.BooleanProperty(default=False)
   
@@ -135,6 +179,7 @@ class Site(db.Model):
   contactIM = db.IMProperty()
 
 # TODO(pv) batchAdd, batchDelete
+# TODO(pv): Protect Error and subclasses?
 class RPCMethods:
   
   class Error(Exception):
@@ -243,18 +288,14 @@ class RPCMethods:
     if not self._is_admin():
       raise self.AccessDenied
     
-    if False:
+    if False: # Set to True to fake data (allows getting static [test] data when offline)
       url = str(url)
       response = None
       #logging.debug('fetching "%s"' % url)
       from google.appengine.api import urlfetch
       response = urlfetch.fetch(url)
-      response = dict(
-          content=response.content,
-          content_was_truncated=response.content_was_truncated,
-          #headers=response.headers, # http://b/issue?id=1195299
-          status_code=response.status_code,
-        )
+      response = dict([(key, getattr(response, key)) for key in dir(response) if key[0] != '_'])
+      del response['headers']
     else:
       import evchargermap
       response = dict(
@@ -265,6 +306,12 @@ class RPCMethods:
         )
     #logging.debug('got %r' % repr(response))
     return response
+
+  def get_service_descriptors(self):
+    """
+    requires:anonymous
+    """
+    return ChargerServiceDescriptors
 
   def add_site(self, name, latlng, props=None, user=users.get_current_user()):
     """
@@ -306,26 +353,34 @@ class RPCMethods:
       raise self.AccessDenied
     
     if isinstance(props, dict):
+      
       logging.debug('props = %r' % repr(props))
+      
       # iterate through only existing non-underscored properties
-      for key in site.properties().iterkeys():
-        if key[0] != '_' and key in props.keys():
-          value = props[key]
-          
-          if isinstance(value, basestring):
-            value = value.strip('\n ,')
+      for property in site.properties().iterkeys():
+        if property[0] == '_' or property not in props.keys():
+          continue
+        
+        attr = getattr(site, property)
 
-          attr = getattr(site, key)
-          
-          # TODO(pv): Lambda this
-          if isinstance(attr, db.GeoPt):
-            value=self._to_latlng(value)
-          elif isinstance(attr, bool):
-            value=self._to_bool(value)
-          #elif isinstance(attr, list/dict/type): # type...
-          
-          logging.debug('Setting site.%s=%s' % (key, repr(value)))
-          setattr(site, key, value)
+        value = props[property]
+
+        # Massage data as needed to fit in to the Model(s) 
+        
+        if isinstance(value, basestring):
+          value = value.strip('\n ,') # pv: Why did I do this?
+
+        # TODO(pv): Can this be lambdaed?
+        if isinstance(attr, db.GeoPt):
+          value=self._to_latlng(value)
+        elif isinstance(attr, bool):
+          value=self._to_bool(value)
+        elif property in ('action',):
+          value=value.lower()
+        #elif isinstance(attr, list/dict/type): # type...
+        
+        logging.debug('Setting site.%s=%s' % (property, repr(value)))
+        setattr(site, property, value)
       site.put()
     
     return self._get_site_id_and_properties(site)

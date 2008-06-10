@@ -15,6 +15,7 @@ if( !window.XMLHttpRequest ) XMLHttpRequest = function()
 // Defined Server methods
 var server = {};
 InstallFunction(server, "POST", "get_url", "GetUrl");
+InstallFunction(server, "GET", "get_service_descriptors", "GetServiceDescriptors");
 InstallFunction(server, "GET", "get_sites", "GetSites");
 InstallFunction(server, "GET", "get_site", "GetSite");
 InstallFunction(server, "POST", "add_site", "AddSite");
