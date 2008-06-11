@@ -86,19 +86,6 @@ class POV(db.Model):
   roll = db.FloatProperty()
   zoom = db.IntegerProperty()
   
-# NOTE: Some items are intentionally *NOT* a dict, so as to maintain order
-ChargerServiceDescriptors = dict(
-    types=(
-           ('spi','Small Paddle Inductive'),
-           ('lpi','Large Paddle Inductive'),
-           ('avcon','AVCon'),
-           ('cond120','Conductive 110V-120V NEMA 5-15'),
-           ('cond240','Conductive 208V-240V NEMA 14-50'),
-           ),
-    conditions=('working','marginal','not working','unknown'),
-    breakers=('?','15A','20A','30A','40A','50A','60A','70A','80A','90A','100A'),
-    )
-
 ChargerAction = ['ok', 'new loc', 'down loc', 'prob loc', 'spi down', 'spi prob', 'unknown']
 # TODO(pv): Last Confirmed By
 
@@ -140,6 +127,42 @@ class NEMA(db.Model):
   #socket = db.
   pass
 
+# NOTE: Some items are intentionally *NOT* a dict, so as to maintain order
+# TODO(pv): Localize these (and any other) strings?
+class ChargerService:
+  types=(
+         ('spi','Small Paddle Inductive'),
+         ('lpi','Large Paddle Inductive'),
+         ('avcon','AVCon'),
+         ('cond120','Conductive 110V-120V NEMA 5-15'),
+         ('cond240','Conductive 208V-240V NEMA 14-50'),
+         )
+  conditions=('working','marginal','not working','unknown')
+  breakers=('15A','20A','30A','40A','50A','60A','70A','80A','90A','100A','?')
+  
+  def get_type(self, key):
+    key = key.lower()
+    for type in types:
+      if type[0] == key:
+        return type[0]
+  
+  def get_descriptors(self):
+    return dict(
+        types=self.types,
+        conditions=self.conditions,
+        breakers=self.breakers,
+      )
+
+
+class Service(db.Model):
+  type = db.StringProperty(choices=[type[0] for type in ChargerService.types])
+  condition = db.StringProperty(choices=ChargerService.conditions)
+  breaker = db.StringProperty(choices=ChargerService.breakers)
+  breaker_accessible = db.BooleanProperty()
+  #ground-fault?
+  #arc-fault?
+  #plug?
+
 
 class Site(db.Model):
   
@@ -158,15 +181,13 @@ class Site(db.Model):
   address = db.PostalAddressProperty()
   description = db.TextProperty()
   
-  # from evchargermaps
+  # From evchargermaps
   action = db.StringProperty(choices=ChargerAction)
-  pay = db.BooleanProperty(default=False)
-  restricted = db.BooleanProperty(default=False)
+  pay = db.BooleanProperty() # pay access only?
+  restricted = db.BooleanProperty() # authorized access only?
   
-  # other ideas
-  breaker = db.BooleanProperty(default=False)
-
-  #types = db.ListProperty() choices=set(["cat", "dog", "bird"])
+  # List of Service entries in the DB 
+  services = db.ListProperty(int) # List of key.id to Service entities
   #db.BlobProperty() # images, etc
   #db.ListProperty() # images, history, ...
   # ReferenceProperty?
@@ -178,8 +199,9 @@ class Site(db.Model):
   contactURL = db.LinkProperty()
   contactIM = db.IMProperty()
 
+
 # TODO(pv) batchAdd, batchDelete
-# TODO(pv): Protect Error and subclasses?
+# TODO(pv): Do I need to protect Error and subclasses?
 class RPCMethods:
   
   class Error(Exception):
@@ -311,7 +333,7 @@ class RPCMethods:
     """
     requires:anonymous
     """
-    return ChargerServiceDescriptors
+    return ChargerService().get_descriptors()
 
   def add_site(self, name, latlng, props=None, user=users.get_current_user()):
     """
@@ -391,7 +413,7 @@ class RPCMethods:
     """
 
     # limit output to only these values
-    columns = ['id','name','latlng','userCreator','contactEmail',]#types
+    columns = ['id','name','latlng','userCreator','contactEmail',]#services?
     
     sites = Site.gql('WHERE _deleted = FALSE ORDER BY _dateCreated')
     

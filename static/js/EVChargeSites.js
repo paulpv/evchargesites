@@ -83,26 +83,28 @@ function SitesManager(map, current_user, is_admin){
   this.cluster = new ClusterMarker(map, {clusterMarkerIcon:this.getClusterMarkerIcon()});
   server.GetServiceDescriptors(bind(this, function(serviceDescriptors){
     
-      var serviceTypes = serviceDescriptors.types;
-      this.serviceTypes = {};
-      var htmlTypes = '<select id="edit{0}">\n';
-      for (var i=0; i<serviceTypes.length; i++){
-        var value = serviceTypes[i][0];
-        var display = serviceTypes[i][1];
-        this.serviceTypes[value] = display;
+      this.services = {};
+      var htmlTypes = '<select id="{0}">\n';
+      var types = serviceDescriptors.types;
+      for (var i=0; i<types.length; i++){
+        var value = types[i][0];
+        var display = types[i][1];
+        this.services[value] = display;
         htmlTypes += '<option value="'+value+'">'+display+'</option>\n';
       }
       htmlTypes += '</select>\n';
   
-      var htmlConditions = '<select id="edit{0}">\n';
-      for(i=0; i<serviceDescriptors.conditions.length; i++){
-        htmlConditions += '<option>'+serviceDescriptors.conditions[i].capitalize()+'</option>\n';
+      var htmlConditions = '<select id="{0}">\n';
+      var conditions = serviceDescriptors.conditions;
+      for(i=0; i<conditions.length; i++){
+        htmlConditions += '<option>'+conditions[i].capitalize()+'</option>\n';
       }
       htmlConditions += '</select>\n';
   
-      var htmlBreakers = '<select id="edit{0}">\n';
-      for(i=0; i<serviceDescriptors.breakers.length; i++){
-        htmlBreakers += '<option>'+serviceDescriptors.breakers[i]+'</option>\n';
+      var htmlBreakers = '<select id="{0}">\n';
+      var breakers = serviceDescriptors.breakers;
+      for(i=0; i<breakers.length; i++){
+        htmlBreakers += '<option>'+breakers[i]+'</option>\n';
       }
       htmlBreakers += '</select>\n';
   
@@ -476,7 +478,7 @@ ChargeSite.prototype.makeStreetViewDOM = function(details){
 ChargeSite.prototype.htmlServices = function(details){
   
   // HARD CODED FOR DEBUGGING; remove when no longer needed
-  details.types = DEBUG_SERVICES;
+  details.services = DEBUG_SERVICES;
 
   var id = this.id;
 
@@ -487,27 +489,28 @@ ChargeSite.prototype.htmlServices = function(details){
     '  <th>Condition</th>' +
     '  <th>Breaker</th>' +
     '</tr>';
-  for (var i=0; i<details.types.length; i++){
-    var service = details.types[i];
+  for (var i=0; i<details.services.length; i++){
+    var service = details.services[i];
     var htmlRow = '' +
     '<tr>' +
-    '<td>{2}</td>' +
+    '<td nowrap="true" align="right">' +
+    '<span id="btnServiceDelete{0}_{1}" style="display:none;"><input type="button" value="X" onclick="alert(\'TODO(pv): Delete this row...\');"/></span>' +
+    '{2}</td>' +
     '<td><span id="serviceType{0}_{1}">{3}</span></td>' +
     '<td><span id="serviceCondition{0}_{1}">{4}</span></td>' +
     '<td nowrap="true"><span id="serviceBreaker{0}_{1}">{5}</span>' +
     '<span id="serviceBreakerAccessible{0}_{1}">{6}</span>' +
-    '<span id="serviceDelete{0}_{1}" style="display:none;"><input type="button" value="X" onclick="alert(\'TODO(pv): Delete this row...\');"/></span>'
     '</td>' +
     '</tr>';
     htmlRows += htmlRow.format(id,
         i,
         i+1,
-        siteman.serviceTypes[service.type],
+        siteman.services[service.type],
         service.condition.capitalize(),
         service.breaker,
         (service.breakerAccessible) ? '*' : '');
   }
-  return '<table border="1" width="100%">' + 
+  return '<table id="tblServices{0}" border="1" width="100%">'.format(id) + 
     htmlRows + 
     '</table>' +
     '<span style="font-size:xx-small;">* = Breaker is accessible</span>';  
@@ -530,7 +533,7 @@ ChargeSite.prototype.htmlDetails = function(details){
     '  </tr>' +
     '  <tr>' +
     '    <td valign="top" align="right"<b>Services:</b>' + 
-    '    <td valign="top" align="right">{4}</td>' + 
+    '    <td valign="top" align="right"><span id="services{0}">{4}</span></td>' + 
     '  </tr>' +
     '  <tr>' +
     '    <td valign="top" align="right"><b>Contact:</b></td>' +
@@ -728,7 +731,7 @@ ChargeSite.prototype.toggleEditMode = function(save){
   }
 }
 
-ChargeSite.prototype.selectEdit = function(input){
+function selectEdit(input){
 	var defaultValue = input.value;
   input.onclick = input.onfocus = function(){
   	DBG('"'+this.value+'"?="'+defaultValue+'"');
@@ -738,17 +741,17 @@ ChargeSite.prototype.selectEdit = function(input){
   }
 }
 
-ChargeSite.prototype.htmlInputTextElement = function(id, value, width){
+function htmlInputTextElement(id, value, width){
   var style = (width) ? 'style="width:'+width+';"' : '';
   return '<input type="text" '+style+' id="'+id+'" value="'+value+'"/>';
 }
 
-ChargeSite.prototype.htmlTextAreaElement = function(rows, id, value, width){
+function htmlTextAreaElement(rows, id, value, width){
   var style = (width) ? 'style="width:'+width+';"' : '';
   return '<textarea rows="'+rows+'" '+style+' id="'+id+'">'+value+'</textarea>';
 }
 
-ChargeSite.prototype.htmlSelectOptionElement = function(id, options, selectedValue, width){
+function htmlSelectOptionElement(id, options, selectedValue, width){
   selectedValue = selectedValue.toString().toLowerCase();
   var style = (width) ? 'style="width:'+width+';"' : '';
   var html = '<select id="'+id+'" '+style+'>\n';
@@ -762,30 +765,45 @@ ChargeSite.prototype.htmlSelectOptionElement = function(id, options, selectedVal
   return html;
 }
 
-ChargeSite.prototype.htmlInputCheckboxElement = function(id, checked){
+function htmlInputCheckboxElement(id, checked){
   return '<input type="checkbox" id="'+id+'" '+((checked)?'checked="on"':'')+'/>';
 }
 
-ChargeSite.prototype.selectOption = function(id, selectedValue){
+function selectOptionValue(id, value){
   var element = $(id);
-  selectedValue = selectedValue.toString().toLowerCase();
+  value = value.toString().toLowerCase();
   for (var i=0; i<element.length; i++){
     var option = element.options[i]; 
-    if (option.value.toLowerCase() == selectedValue){
+    if (option.value.toLowerCase() == value){
       option.selected = true;
       break;
     }
   }
 }
 
-ChargeSite.prototype.renderText = function(site, staticText){
+function addNewServiceRow(id, suffix){
+  var tbl = $(id);
+  var newRow = tbl.insertRow(-1);
+  var newCell = newRow.insertCell(-1);
+  newCell.innerHTML = '<input type="button" value="+" onclick="addNewServiceRow(\''+id+'\',\''+suffix+'\')"/>*';
+  suffix += '_'+tbl.rows.length;
+  newCell = newRow.insertCell(-1);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.types.format('newServiceType'+suffix);
+  newCell = newRow.insertCell(-1);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.conditions.format('newServiceCondition'+suffix);
+  newCell = newRow.insertCell(-1);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.breakers.format('newServiceBreaker'+suffix) +
+      this.htmlInputCheckboxElement('newServiceBreakerAccessible'+suffix);
+}
 
-  var id = site.id;
+ChargeSite.prototype.renderText = function(details, staticText){
+
+  var id = details.id;
   var btnOne = $('btnOne'+id);
   var btnTwo = $('btnTwo'+id);
 
   // FOR DEBUGGING ONLY! (Remove eventually)
-  site.types = DEBUG_SERVICES;
+  details.services = DEBUG_SERVICES;
   
   if (staticText){
     
@@ -795,76 +813,74 @@ ChargeSite.prototype.renderText = function(site, staticText){
 	  btnTwo.onclick = function() { selectedSite.confirmDeleteSite(); };
 
     // Render Basic Info
-	  $('name' + id).innerHTML = textToHTML(site.name);
-	  $('address' + id).innerHTML = textToHTML(site.address);
-	  $('description' + id).innerHTML = textToHTML(site.description);
+	  $('name'+id).innerHTML = textToHTML(details.name);
+	  $('address'+id).innerHTML = textToHTML(details.address);
+	  $('description'+id).innerHTML = textToHTML(details.description);
 	  
-	  // Render Service Types
-    for (var i=0; i<site.types.length; i++){
-      var service = site.types[i];
-      $('serviceType'+id+'_'+i).innerHTML = siteman.serviceTypes[service.type];
-      $('serviceCondition'+id+'_'+i).innerHTML = service.condition.capitalize();
-      $('serviceBreaker'+id+'_'+i).innerHTML = service.breaker;
-      $('serviceBreakerAccessible'+id+'_'+i).innerHTML = (service.breakerAccessible) ? '*' : '';
-      $('serviceDelete'+id+'_'+i).style.display = 'none';
-    }
-	  
+	  // Render Services
+	  $('services'+id).innerHTML = this.htmlServices(details);
+	  	  
 	  // Render Contact Info	  
-    $('contactName' + id).innerHTML = textToHTML(site.contactName);
-    $('contactPhone' + id).innerHTML = textToHTML(site.contactPhone);
-    $('contactEmail' + id).innerHTML = textToHTML(site.contactEmail);
+    $('contactName'+id).innerHTML = textToHTML(details.contactName);
+    $('contactPhone'+id).innerHTML = textToHTML(details.contactPhone);
+    $('contactEmail'+id).innerHTML = textToHTML(details.contactEmail);
     
   } else {
 
     var width;
 
     // Render Editable Basic Info
-    $('name' + id).innerHTML = this.htmlInputTextElement('editName', site.name);
+    $('name'+id).innerHTML = htmlInputTextElement('editName', details.name);
     width = this.calcInputWidth('editName');
-    $('address' + id).innerHTML = this.htmlTextAreaElement(3, 'editAddress', site.address, width);
-    $('description' + id).innerHTML = this.htmlTextAreaElement(5, 'editDescription', site.description, width);
-    $('contactName' + id).innerHTML = this.htmlInputTextElement('editContactName', site.contactName, width);
+    $('address'+id).innerHTML = htmlTextAreaElement(3, 'editAddress', details.address, width);
+    $('description'+id).innerHTML = htmlTextAreaElement(5, 'editDescription', details.description, width);
 
-    // Render Editable Service Types
-    for (var i=0; i<site.types.length; i++){
+    // Render Editable Services
+    for (var i=0; i<details.services.length; i++){
       
-      var service = site.types[i];
+      var service = details.services[i];
       
-      var name = 'serviceType'+id+'_'+i;
-      var capitalized = name.capitalize(false);            
-      $(name).innerHTML = siteman.htmlServiceDescriptors.types.format(capitalized);
-      this.selectOption('edit'+capitalized, service.type);
+      var suffix = id+'_'+i;
+
+      $('btnServiceDelete'+suffix).style.display = 'inline';
+      
+      var spanName = 'serviceType'+suffix;
+      var editName = 'edit'+spanName.capitalize(false);            
+      $(spanName).innerHTML = siteman.htmlServiceDescriptors.types.format(editName);
+      selectOptionValue(editName, service.type);
   
-      var name = 'serviceCondition'+id+'_'+i;
-      var capitalized = name.capitalize(false);
-      $(name).innerHTML = siteman.htmlServiceDescriptors.conditions.format(capitalized);
-      this.selectOption('edit'+capitalized, service.condition);
+      spanName = 'serviceCondition'+suffix;
+      editName = 'edit'+spanName.capitalize(false);
+      $(spanName).innerHTML = siteman.htmlServiceDescriptors.conditions.format(editName);
+      selectOptionValue(editName, service.condition);
 
-      var name = 'serviceBreaker'+id+'_'+i;
-      var capitalized = name.capitalize(false);
-      $(name).innerHTML = siteman.htmlServiceDescriptors.breakers.format(capitalized);
-      this.selectOption('edit'+capitalized, service.breaker);
+      spanName = 'serviceBreaker'+suffix;
+      editName = spanName.capitalize(false);
+      $(spanName).innerHTML = siteman.htmlServiceDescriptors.breakers.format(editName);
+      selectOptionValue(editName, service.breaker);
 
-      var name = 'serviceBreakerAccessible'+id+'_'+i;
-      var capitalized = name.capitalize(false);
-      $(name).innerHTML = this.htmlInputCheckboxElement('edit'+capitalized, service.breakerAccessible);
-      
-      $('serviceDelete'+id+'_'+i).style.display = 'inline';
+      spanName = 'serviceBreakerAccessible'+suffix;
+      editName = spanName.capitalize(false);
+      $(spanName).innerHTML = htmlInputCheckboxElement(editName, service.breakerAccessible);
     }
     
+    // Add new row to allow inserting new Service type
+    addNewServiceRow('tblServices'+id, id);
+    
     // Render Editable Contact Info
+    $('contactName'+id).innerHTML = htmlInputTextElement('editContactName', details.contactName, width);
     width = this.calcInputWidth('editContactName');
-    $('contactPhone' + id).innerHTML = this.htmlInputTextElement('editContactPhone', site.contactPhone, width);
-    $('contactEmail' + id).innerHTML = this.htmlInputTextElement('editContactEmail', site.contactEmail, width);
+    $('contactPhone'+id).innerHTML = htmlInputTextElement('editContactPhone', details.contactPhone, width);
+    $('contactEmail'+id).innerHTML = htmlInputTextElement('editContactEmail', details.contactEmail, width);
     
     // Highlight newsite values to encourage changing defaults... 
     if (this.newsite){
-    	this.selectEdit($('editName'));
-      this.selectEdit($('editAddress'));
-      this.selectEdit($('editDescription'));
-      this.selectEdit($('editContactName'));
-      this.selectEdit($('editContactPhone'));
-      this.selectEdit($('editContactEmail'));
+    	selectEdit($('editName'));
+      selectEdit($('editAddress'));
+      selectEdit($('editDescription'));
+      selectEdit($('editContactName'));
+      selectEdit($('editContactPhone'));
+      selectEdit($('editContactEmail'));
     	
       btnOne.value = 'Delete';
       btnOne.onclick = function() { selectedSite.confirmDeleteSite(); };
