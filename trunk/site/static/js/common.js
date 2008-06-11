@@ -42,10 +42,6 @@ Array.prototype.indexOf = function(item){
   return -1;  
 }
 
-Array.prototype.contains = function(item){
-  return this.indexOf(item) != -1;
-}
-
 
 // For callback objects to bind a method to themself
 function bind(obj, func){
