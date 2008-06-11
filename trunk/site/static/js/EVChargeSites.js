@@ -2,15 +2,6 @@
 // @author Paul Peavyhouse (pv@swooby.com)
 //
 
-// HARD CODED FOR DEBUGGING; remove when no longer needed
-var DEBUG_SERVICES = [];
-/*    new ChargeService('avcon','working','30A',false),
-    new ChargeService('avcon','marginal','30A',false),
-    new ChargeService('spi','not working','40A',true),
-    new ChargeService('cond120','not working','15A',true),
-    new ChargeService('cond240','unknown','?',false)
-    ];*/
-
 // Pointer to the one and only marker that we can edit at a time
 var selectedSite = null;
 
@@ -239,55 +230,61 @@ function htmlSelectOptionElement(id, options, selectedValue, width){
   return html;
 }
 
-function htmlInputCheckboxElement(id, checked){
-  return '<input type="checkbox" id="'+id+'" '+((checked)?'checked="on"':'')+'/>';
+function htmlInputCheckboxElement(checked){
+  return '<input type="checkbox" '+((checked)?'checked="on"':'')+'/>';
 }
 
-function selectOptionValue(id, value){
-  var element = $(id);
-  value = value.toString().toLowerCase();
-  for (var i=0; i<element.length; i++){
+function htmlInputButtonElement(value, onclick, width){
+  var style = (width) ? 'style="width:'+width+';"' : '';
+  return '<input type="button" value="'+value+'" onclick="'+onclick+'" '+style+'/>';
+}
+
+function selectOptionValue(element, value){
+  if (value)
+    value = value.toString().toLowerCase();
+  for (var i=0; i<element.options.length; i++){
     var option = element.options[i]; 
-    if (option.value.toLowerCase() == value){
+    if (value && (option.value.toLowerCase() == value)){
       option.selected = true;
       break;
     }
   }
 }
 
-function addNewServiceRow(id, suffix){
-  var tbl = $(id);
+function addNewServiceRow(button){
+  var cell = button.parentNode;
+  var row = cell.parentNode;
+  var tbody = row.parentNode;
+  var tbl = tbody.parentNode;
   var newRow = tbl.insertRow(-1);
+  var rowNum = tbl.rows.length-1;
   var newCell = newRow.insertCell(-1);
+  newCell.align='right';
+  newCell.style.whiteSpace='nowrap';
+  newCell.innerHTML = htmlInputButtonElement('X', 'deleteServiceRow(this)') + '?';
+  newCell = newRow.insertCell(-1);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.types;
+  newCell = newRow.insertCell(-1);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.conditions;
+  newCell = newRow.insertCell(-1);
   newCell.style.whiteSpace="nowrap";
-  newCell.innerHTML = '?';
-  suffix += '_'+(tbl.rows.length-1);
-  newCell = newRow.insertCell(-1);
-  newCell.innerHTML = siteman.htmlServiceDescriptors.types.format('newServiceType'+suffix);
-  newCell = newRow.insertCell(-1);
-  newCell.innerHTML = siteman.htmlServiceDescriptors.conditions.format('newServiceCondition'+suffix);
-  newCell = newRow.insertCell(-1);
-  newCell.style.whiteSpace="nowrap";
-  newCell.innerHTML = siteman.htmlServiceDescriptors.breakers.format('newServiceBreaker'+suffix) +
-      this.htmlInputCheckboxElement('newServiceBreakerAccessible'+suffix);
+  newCell.innerHTML = siteman.htmlServiceDescriptors.breakers + htmlInputCheckboxElement() + '*';
 }
 
-function addAddNewServiceRowButton(id, suffix){
+function deleteServiceRow(button){
+  var cell = button.parentNode;
+  var row = cell.parentNode;
+  var tbody = row.parentNode;
+  var tbl = tbody.parentNode;
+  tbl.deleteRow(row.rowIndex);
+}
+
+function addAddNewServiceRowButton(id){
   var tbl = $(id);
   var newRow = tbl.insertRow(-1);
   var newCell = newRow.insertCell(-1);
   newCell.colSpan=4;
-  newCell.innerHTML = '<input type="button" style="width:100%;" value="Add New Service" onclick="addNewServiceRow(\''+id+'\',\''+suffix+'\')"/>';
-}
-
-
-// TODO(pv): Verify that values are in expected range(s)
-function ChargeService(type, condition, breaker, breakerAccessible){
-  this.type = type; // 'avcon', 'spi', 'lpi', 'cond120', 'cond240', ...
-  this.condition = condition; // 'working', 'not working', 'marginal', 'unknown'
-  this.breaker = breaker; // '?', '15A', '20A', ..., '100A', ...
-  this.breaker_accessible = breakerAccessible; // true | false
-  return this;
+  newCell.innerHTML = htmlInputButtonElement('Add New Service', 'addNewServiceRow(this)', '100%');
 }
 
 
@@ -552,14 +549,9 @@ ChargeSite.prototype.makeStreetViewDOM = function(details){
   
 }
 
-ChargeSite.prototype.htmlServices = function(details){
+ChargeSite.prototype.htmlServices = function(services){
   
-  // HARD CODED FOR DEBUGGING; remove when no longer needed
-  //details.services = DEBUG_SERVICES;
-
   var id = this.id;
-  
-  var services = details.services;
   
   var html = '<table id="tblServices{0}" border="1" width="100%">'.format(id) +
     '<tr>' +
@@ -577,24 +569,15 @@ ChargeSite.prototype.htmlServices = function(details){
       var service = services[i];
       var htmlRow = '' +
       '<tr>' +
-      '<td style="white-space:nowrap;" nowrap="true" align="right">' +
-        '<span id="btnServiceDelete{0}_{1}" style="display:none;">' +
-          '<input type="button" value="X" onclick="$(\'tblServices{0}\').deleteRow({1})"/>' +
-        '</span>' +
-        '{1}' +
-      '</td>' +
-      '<td><span id="serviceType{0}_{1}">{2}</span></td>' +
-      '<td><span id="serviceCondition{0}_{1}">{3}</span></td>' +
-      '<td style="white-space:nowrap;" nowrap="true">' +
-        '<span id="serviceBreaker{0}_{1}">{4}</span>' +
-        '<span id="serviceBreakerAccessible{0}_{1}">{5}</span>' +
-      '</td>' +
+        '<td style="white-space:nowrap;" nowrap="true" align="right">{0}</td>' +
+        '<td>{1}</td>' +
+        '<td>{2}</td>' +
+        '<td style="white-space:nowrap;" nowrap="true">{3}{4}</td>' +
       '</tr>';
-      html += htmlRow.format(id,
-          i+1,
+      html += htmlRow.format(i+1,
           siteman.services[service.type],
-          service.condition.capitalize(),
-          service.breaker,
+          service.condition || 'Unknown',
+          service.breaker || '?',
           (service.breaker_accessible) ? '*' : '');
     }
   }
@@ -664,7 +647,7 @@ ChargeSite.prototype.htmlDetails = function(details){
                      textToHTML(details.name),
                      textToHTML(details.address),
                      textToHTML(details.description),
-                     textToHTML(this.htmlServices(details)),
+                     textToHTML(this.htmlServices(details.services)),
                      textToHTML(details.contactName),
                      //textToHTML(details.contactAddress),
                      textToHTML(details.contactPhone),
@@ -687,7 +670,7 @@ ChargeSite.prototype.openInfoWindow = function(details){
   // TODO(pv): History Tab? (show modifications?  to who?)
   
   var opts = {
-//  	selectedTab: 1, // Possible we would prefer SV as selected tab?
+//  	selectedTab: 1, // Is it possible we would prefer another initial tab?
 //  	maxWidth:?, // map.clientWidth - some margin
 //  	maxTitle:?, //
 //  	maxContent:?, // TODO(pv): Calculate (similar to tabDetails+tabStreetView)
@@ -790,25 +773,19 @@ ChargeSite.prototype.toggleEditMode = function(save){
         continue;
       }
 
-      var service = {};
-      var cell0 = row.cells[0];
-      var serviceNum = cell0.lastChild.data;
-      var prefix = (serviceNum == '?') ? 'new' : 'edit';
-      var suffix = id+'_'+ ((prefix == 'new') ? i : serviceNum);
+      var cellType = row.cells[1];
+      var cellCondition = row.cells[2];
+      var cellBreaker = row.cells[3];
       
-      DBG(prefix+'ServiceType'+suffix);
-      
-      var type = $(prefix+'ServiceType'+suffix);
-      if (type){
-        // Skip this row       
-        service.type = $(prefix+'ServiceType'+suffix).value;
-        service.condition = $(prefix+'ServiceCondition'+suffix).value;
-        service.breaker = $(prefix+'ServiceBreaker'+suffix).value;
-        service.breaker_accessible = $(prefix+'ServiceBreakerAccessible'+suffix).checked;
-  
-        DBG(service.toSource());
-        json.services.push(service);
+      var service = {
+        type: cellType.firstChild.value,
+        condition: cellCondition.firstChild.value,
+        breaker: cellBreaker.childNodes[0].value,
+        breaker_accessible: cellBreaker.childNodes[2].checked
       }
+
+      DBG(service.toSource());
+      json.services.push(service);
     }
     
     // TODO(pv): Submit only if changed/"dirty" & valid?
@@ -866,9 +843,6 @@ ChargeSite.prototype.renderText = function(details, staticText){
   var btnOne = $('btnOne'+id);
   var btnTwo = $('btnTwo'+id);
 
-  // FOR DEBUGGING ONLY! (Remove eventually)
-  //details.services = DEBUG_SERVICES;
-  
   if (staticText){
     
 	  btnOne.value = 'Edit';
@@ -882,7 +856,7 @@ ChargeSite.prototype.renderText = function(details, staticText){
 	  $('description'+id).innerHTML = textToHTML(details.description);
 	  
 	  // Render Services
-	  $('services'+id).innerHTML = this.htmlServices(details);
+	  $('services'+id).innerHTML = this.htmlServices(details.services);
 	  	  
 	  // Render Contact Info	  
     $('contactName'+id).innerHTML = textToHTML(details.contactName);
@@ -901,38 +875,35 @@ ChargeSite.prototype.renderText = function(details, staticText){
     
     var services = details.services;
     if (services){
+      
+      var tbl = $('tblServices'+id);
+      
       // Render Editable Services
       for (var i=0; i<services.length; i++){
         
+        var row = tbl.rows[i+1];
         var service = services[i];
+
+        var cellNum = row.cells[0];
+        var cellType = row.cells[1];
+        var cellCondition = row.cells[2];
+        var cellBreaker = row.cells[3];
         
-        var suffix = id+'_'+(i+1);
-  
-        $('btnServiceDelete'+suffix).style.display = 'inline';
+        cellNum.innerHTML = htmlInputButtonElement('X', 'deleteServiceRow(this)') + cellNum.innerHTML; 
+
+        cellType.innerHTML = siteman.htmlServiceDescriptors.types;
+        selectOptionValue(cellType.firstChild, service.type);
         
-        var spanName = 'serviceType'+suffix;
-        var editName = 'edit'+spanName.capitalize(false);            
-        $(spanName).innerHTML = siteman.htmlServiceDescriptors.types.format(editName);
-        selectOptionValue(editName, service.type);
-    
-        spanName = 'serviceCondition'+suffix;
-        editName = 'edit'+spanName.capitalize(false);
-        $(spanName).innerHTML = siteman.htmlServiceDescriptors.conditions.format(editName);
-        selectOptionValue(editName, service.condition);
-  
-        spanName = 'serviceBreaker'+suffix;
-        editName = 'edit'+spanName.capitalize(false);
-        $(spanName).innerHTML = siteman.htmlServiceDescriptors.breakers.format(editName);
-        selectOptionValue(editName, service.breaker);
-  
-        spanName = 'serviceBreakerAccessible'+suffix;
-        editName = 'edit'+spanName.capitalize(false);
-        $(spanName).innerHTML = htmlInputCheckboxElement(editName, service.breaker_accessible);
+        cellCondition.innerHTML = siteman.htmlServiceDescriptors.conditions;
+        selectOptionValue(cellCondition.firstChild, service.condition || 'Unknown');
+
+        cellBreaker.innerHTML = siteman.htmlServiceDescriptors.breakers + htmlInputCheckboxElement(service.breaker_accessible) + '*';
+        selectOptionValue(cellBreaker.firstChild, service.breaker || '?');
       }
     }
-    
+
     // Add new row to allow inserting new Service type
-    addAddNewServiceRowButton('tblServices'+id, id);
+    addAddNewServiceRowButton('tblServices'+id);
     // TODO(pv): Allow moving rows up/down
     
     // Render Editable Contact Info

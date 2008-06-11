@@ -10,8 +10,8 @@ evchargermap = """
 <restricted>yes</restricted>
 <address>1935 SW 35th Ave.</address>
 <city>aos, Delray Beach, FL</city>
-<spi number="1" up="1">hello</spi>
-<othercond number="2" up="2">world</othercond>
+<spi number="1" up="1"/>
+<othercond number="2" up="2"/>
 </site>
 <site>
 <id>99991_1</id>

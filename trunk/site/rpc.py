@@ -86,7 +86,11 @@ class POV(db.Model):
   roll = db.FloatProperty()
   zoom = db.IntegerProperty()
   
-ChargerAction = ['ok', 'new loc', 'down loc', 'prob loc', 'spi down', 'spi prob', 'unknown']
+ChargerAction = ['ok', 'add loc', 'new loc', 'down loc', 'prob loc', 'chg rec',
+                 'avc down', 'avc prob',
+                 'spi down', 'spi prob',
+                 'lpi down', 'lpi prob',
+                 'unknown']
 # TODO(pv): Last Confirmed By
 
 NEMA_volts = {
@@ -133,6 +137,7 @@ class ChargerService:
   types=(
          ('cond120','110V-120V NEMA 5-15'),
          ('cond240','208V-240V NEMA 14-50'),
+         ('condOther','Conductive - Other'),
          ('avcon','AVCon'),
          ('lpi','Large Paddle Inductive'),
          ('spi','Small Paddle Inductive'),
@@ -183,17 +188,16 @@ class Site(db.Model):
   latlng = db.GeoPtProperty(required=True)
   address = db.PostalAddressProperty()
   description = db.TextProperty()
-  
-  # From evchargermaps
-  action = db.StringProperty(choices=ChargerAction)
   pay = db.BooleanProperty() # pay access only?
   restricted = db.BooleanProperty() # authorized access only?
   
   # List of Service entries in the DB 
   services = db.ListProperty(db.Key) # List of keys to Service entities
+
   #db.BlobProperty() # images, etc
   #db.ListProperty() # images, history, ...
   # ReferenceProperty?
+  # Related sites?
   
   contactName = db.StringProperty()
   contactAddress = db.PostalAddressProperty()
@@ -307,29 +311,26 @@ class RPCMethods:
     Returns a list of ints of the added/found services
     """
     service_keys = []
-    logging.info('services=%r' % repr(services))
     if services:
       for service in services:
+        
         # Convert keys from possible unicode to string (for ** below)
         service = dict([(str(key), value) for key, value in service.iteritems()])
-        logging.info('service=%r' % repr(service))
+        
         gql = []
         params = []
         for key, value in service.iteritems():
           params.append(value) 
           gql.append('%s=:%d' % (key, len(params)))
-        logging.info('gql=%r, params=%r' % (gql, params))
         found = Service.gql('WHERE %s' % ' AND '.join(gql), *params)
-        logging.info('found(%d)=%r' % (found.count(), repr(found)))
         if found.count():
           found = found[0]
         else:
           found = Service(**service)
           found.put()
         service_key = found.key()
-        logging.info('service_key=%s' % service_key)
         service_keys.append(service_key)
-    logging.info('service_keys=%r' % repr(service_keys))
+        
     return service_keys
 
   def _get_services(self, service_keys):
@@ -423,32 +424,31 @@ class RPCMethods:
       logging.debug('props = %r' % repr(props))
       
       # iterate through only existing non-underscored properties
-      for property in site.properties().iterkeys():
-        if property[0] == '_' or property not in props.keys():
+      for key, property in site.properties().iteritems():
+        if key[0] == '_' or key not in props.keys():
           continue
         
-        attr = getattr(site, property)
-
-        value = props[property]
+        data_type = property.data_type
+        value = props[key]
 
         # Massage data as needed to fit in to the Model(s) 
         
-        if isinstance(value, basestring):
-          value = value.strip('\n ,') # pv: Why did I do this?
-
+        #if isinstance(value, basestring):
+        #  value = value.strip('\n ,') # pv: Why did I do this?
+          
         # TODO(pv): Can this be lambdaed?
-        if isinstance(attr, db.GeoPt):
+        if data_type == db.GeoPt:
           value = self._to_latlng(value)
-        elif isinstance(attr, bool):
+        elif data_type == bool:
           value = self._to_bool(value)
-        elif property in ('action',):
+        elif key in ('action',):
           value = value.lower()
-        elif property == 'services':
+        elif key == 'services':
           value = self._add_services(value)
         #elif isinstance(attr, list/dict/type): # type...
         
-        logging.debug('Setting site.%s=%s' % (property, repr(value)))
-        setattr(site, property, value)
+        logging.debug('Setting site.%s=%s' % (key, repr(value)))
+        setattr(site, key, value)
       site.put()
     
     return self._get_site_id_and_properties(site)

@@ -238,16 +238,18 @@
           function(xml, callbackForEach, callbackComplete){
 
             var TechList = {
-              "avc": "Avcon",
-              "spi": "SPI",
-              "lpi": "LPI",
-              "othercond": "Other"
+              "avc": "avcon",
+              "spi": "spi",
+              "lpi": "lpi",
+              "othercond": "condOther"
             };
             
             var regions = [];
             
             for each (var site in xml.site){
 
+              var services = [];
+              
               var techs = {};
               for (var key in TechList) {
                 var techName = TechList[key];
@@ -260,12 +262,26 @@
                   marginal: parseInt(techNode.@marginal.toString() || 0)
                 };
                 techInfo.unknown = Math.max(0, techInfo.number - (techInfo.up + techInfo.down + techInfo.marginal));
-                techs[techName] = techInfo;
+                
+                for(var i=0; i<techInfo.up; i++){
+                  var service = {type:techName, condition:'Working'};
+                  services.push(service);
+                }
+                for(var i=0; i<techInfo.down; i++){
+                  var service = {type:techName, condition:'Not Working'};
+                  services.push(service);
+                }
+                for(var i=0; i<techInfo.marginal; i++){
+                  var service = {type:techName, condition:'Marginal'};
+                  services.push(service);
+                }
+                for(var i=0; i<techInfo.unknown; i++){
+                  var service = {type:techName, condition:'Unknown'};
+                  services.push(service);
+                }
               }
               
-              var services = techs; // TODO(pv): Fix the import of techs!!!
-              
-              var name = site.name.toString() + ' ('+site.id.toString() + ')';
+              var name = site.name.toString();
               name = name.replace('\n','');
               
               // Weird structure for text:
@@ -275,8 +291,6 @@
               var matches = regionCityState.match(/^(.*?),(.*?)(?:,(.*?))?$/);
               if (matches){
               
-                //alert(matches.toSource());
-                
                 var region = matches[1].trim();
                 var city = matches[2].trim();
                 var state = matches[3].trim(); // TODO(pv): Will index 3 always exist?
@@ -323,8 +337,6 @@
                   cityStateCountry = city+', '+country;
                 } 
                 
-                //alert('"'+cityStateCountry+'"');
-                
                 if (regions.indexOf(region) == -1)
                   regions.push(region);
                 
@@ -337,22 +349,16 @@
                 name: name,
                 latlng: '(' + site.latlng.toString() + ')',
                 address: site.address.toString() + " \n" + cityStateCountry,
-                description: '',
-                action: site.action.toString(),
+                description: 'action="'+site.action.toString().trim()+'"\n'+
+                    'Imported from EVChargerMaps.com (id='+site.id.toString()+')',
                 pay: site.pay.toString(),
                 restricted: site.restricted.toString(),
                 services: services,
                 comments: "TODO(pv): Import comments"
               };
-              
               callbackForEach(props);
-              break;
             }
-            
             callbackComplete();
-            
-            //alert(regions);
-            
           });
     }
         
