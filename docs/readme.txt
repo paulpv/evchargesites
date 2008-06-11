@@ -19,6 +19,7 @@
     ScaleControl does not repaint on [some?] zooms (only during drag)
 
   TODO:
+    It is too easy to move markers; Implement "Undo" for moves (or History in general)
     Support multiple phone numbers?
       Make sense of Creator vs. Contact info
     Consolidate use of "site", "details", "props", "info", "json", etc...
