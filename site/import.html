@@ -248,7 +248,7 @@
             
             for each (var site in xml.site){
 
-              var types = {};
+              var techs = {};
               for (var key in TechList) {
                 var techName = TechList[key];
                 
@@ -260,8 +260,10 @@
                   marginal: parseInt(techNode.@marginal.toString() || 0)
                 };
                 techInfo.unknown = Math.max(0, techInfo.number - (techInfo.up + techInfo.down + techInfo.marginal));
-                types[techName] = techInfo;
+                techs[techName] = techInfo;
               }
+              
+              var services = techs; // TODO(pv): Fix the import of techs!!!
               
               var name = site.name.toString() + ' ('+site.id.toString() + ')';
               name = name.replace('\n','');
@@ -323,7 +325,7 @@
                 
                 //alert('"'+cityStateCountry+'"');
                 
-                if (!regions.contains(region))
+                if (regions.indexOf(region) == -1)
                   regions.push(region);
                 
               } else {
@@ -336,15 +338,15 @@
                 latlng: '(' + site.latlng.toString() + ')',
                 address: site.address.toString() + " \n" + cityStateCountry,
                 description: '',
-                status: site.status.toString(), // Up, Down, Marginal, ...
                 action: site.action.toString(),
                 pay: site.pay.toString(),
                 restricted: site.restricted.toString(),
-                types: types,
+                services: services,
                 comments: "TODO(pv): Import comments"
               };
               
               callbackForEach(props);
+              break;
             }
             
             callbackComplete();
