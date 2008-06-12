@@ -206,6 +206,17 @@ class Site(db.Model):
   contactURL = db.LinkProperty()
   contactIM = db.IMProperty()
 
+  evcmid = db.StringProperty() # ID, if imported from EVChargerMaps.com
+
+
+class Comment(db.Model):
+  _dateCreated = db.DateTimeProperty(auto_now_add=True)
+  _dateModified = db.DateTimeProperty(auto_now=True)
+  _dateAccessed = db.DateTimeProperty()
+  site = db.ReferenceProperty(Site)
+  user = db.UserProperty(required=True)
+  text = db.TextProperty(required=True)
+
 
 # TODO(pv) batchAdd, batchDelete
 # TODO(pv): Do I need to protect Error and subclasses?
