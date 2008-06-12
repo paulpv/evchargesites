@@ -16,7 +16,7 @@ API_KEYS = {
   'localhost':'ABQIAAAA0lf9s5m2g3l_sMAsMUUB8xT2yXp_ZAY8_ufC3CFXhHIE1NvwkxTCcubIT5_F9VQlYSX6guPKOiC6dA',
   '127.0.0.1':'ABQIAAAA0lf9s5m2g3l_sMAsMUUB8xRi_j0U6kJrkFvY4-OX2XYmEAa76BTDvoB_Rt6S6xEivow6nooxId20Fw',
   }
-DEBUG_CLIENT = True
+DEBUG_CLIENT = False
   
 
 class MainPage(webapp.RequestHandler):

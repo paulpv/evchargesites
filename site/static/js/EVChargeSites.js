@@ -344,7 +344,7 @@ ChargeSite.prototype.getSiteMarkerIcon = function(id, type){
 ChargeSite.prototype.createMarker = function(latlng){
   var markerOptions = {
     icon: this.getSiteMarkerIcon(this.id, this.type),
-    title: '#' + this.id + ':'+ this.name,
+    title: '#' + this.id + ': '+ this.name,
     draggable: true,
     bouncy: true
   };

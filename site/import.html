@@ -345,18 +345,24 @@
                 break;
               }
               
+              var id = site.id.toString();
+              var urlDetails = 'http://www.evchargernews.com/regions/'+id+'.htm';
+              var urlComments = 'http://evchargermaps.com/data/'+id;
+              
               var props = {
                 name: name,
                 latlng: '(' + site.latlng.toString() + ')',
                 address: site.address.toString() + " \n" + cityStateCountry,
                 description: 'action="'+site.action.toString().trim()+'"\n'+
-                    'Imported from EVChargerMaps.com (id='+site.id.toString()+')',
+                    'Imported from <a href="http://www.evchargermaps.com">EVChargerMaps.com</a> (id=<a href="'+urlDetails+'">'+id+'</a>',
                 pay: site.pay.toString(),
                 restricted: site.restricted.toString(),
                 services: services,
-                comments: "TODO(pv): Import comments"
+                evcmid:id
               };
+
               callbackForEach(props);
+
             }
             callbackComplete();
           });
@@ -446,6 +452,45 @@
             callbackComplete();
           });
     }
+
+    function wait(msecs){
+      var start = new Date().getTime();
+      var cur = start
+      while(cur - start < msecs){
+        cur = new Date().getTime();
+      }
+    } 
+
+    function importEVChargerMapsComments(){
+      var table = $('tableSites');
+      if (!table)
+        return;
+      
+      if (!confirm('Scrapping comments will *INTENTIONALLY* take a very long time.\n'+
+                  'Are you sure you want to do this?'))
+        return;
+                 
+      var rows = table.rows;
+      for(var i=1; i<rows.length-1; i++){
+
+        var id = getRowId(rows[i]);
+        if (!$('check' + id).checked)
+          continue;
+
+        //wait(2000);
+                  
+        server.GetSite(id, function(details){
+          var urlComments = 'http://evchargermaps.com/data/'+details.evcmid;
+          server.GetUrl(urlComments, function(response){
+            if (response.status_code == 200){
+              alert(response.content);
+              //server.UpdateSite(id, {comment:response.content});
+            }            
+          });
+        });
+
+      }
+    }
          
     </script>
   </head>
@@ -471,6 +516,11 @@
          <td align='center'>
            <input id='btnImportNWChargeSites' type='button' style='width:100%' value='Import NW Charger Sites' onclick='importNWChargerSites()'/>
          </td>
+      </tr>
+      <tr>
+        <td align='center' colspan='2'>
+          <input id='btnImportComments' type='button' style='width:100%' value='Import EVChargerMaps Comments' onclick='importEVChargerMapsComments()'/>
+        </td>
       </tr>
     </table>
   </body>

@@ -11,14 +11,10 @@
       http://core.mapmundi.org/mapPortal.do?key=nXrOfnvmKdm7agntOkNlAF4q2bVpdEFfcHyau011kNkOIiHTOEq4G2JQTunSyArklStPVvOXSjGD69NaiQsLyI&color=blue
 
   ISSUES:
-    latest GAE seems to not JSON.dumps urlfetch.fetch().response.headers
-    local dev_appserver cannot url_get NW Charge Sites
-      urlfetch.fetch returns content = "{errorText:\"Unable to contact server.\"}"; where does that come from?
-      This means that we cannot import data in to the dev_appserver
-      We can only use the production server to test w/?
     ScaleControl does not repaint on [some?] zooms (only during drag)
 
   TODO:
+    Move non-essential ChargeSite methods out of ChargeSite (may save lots of memory & cpu)
     It is too easy to move markers; Implement "Undo" for moves (or History in general)
     Support multiple phone numbers?
       Make sense of Creator vs. Contact info
@@ -35,7 +31,7 @@
     
     Add http://clustrmaps.com/
     Oh wow! UI similar to: http://www.kreisalarm.de/drkmap
-    Remove taxi top to car.
+    Remove taxi top of car icon.
       W/ cute FOV indicator:
         http://data.mapchannels.com/mm/dual2/map.htm?x=-122.388581&y=37.789536&z=16&gm=0&ve=3&gc=0&xb=-122.388581&yb=37.789536&zb=1&db=0&bar=1&mw=1&sv=1&svb=0
         <svg version="1.1" overflow="visible" style="position: absolute; left: 433px; top: 70px; z-index: 1000;" width="89px" height="89px" viewBox="433 70 89 89">
